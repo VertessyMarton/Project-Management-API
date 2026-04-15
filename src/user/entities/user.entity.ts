@@ -1,8 +1,10 @@
+import { Exclude } from 'class-transformer';
 import {
   Column,
   CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
@@ -16,6 +18,7 @@ export class User {
   @Column({ unique: true })
   email: string;
 
+  @Exclude({ toPlainOnly: true })
   @Column()
   password: string;
 
@@ -25,6 +28,6 @@ export class User {
   @CreateDateColumn({ nullable: true })
   createdAt: Date;
 
-  @CreateDateColumn({ nullable: true })
+  @UpdateDateColumn({ nullable: true })
   updatedAt: Date;
 }
