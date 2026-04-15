@@ -12,7 +12,7 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: true })
+  @Column()
   name: string;
 
   @Column({ unique: true })
@@ -25,9 +25,9 @@ export class User {
   @Column({ default: 'user' })
   role: string;
 
-  @CreateDateColumn({ nullable: true })
+  @CreateDateColumn()
   createdAt: Date;
 
-  @UpdateDateColumn({ nullable: true })
+  @UpdateDateColumn()
   updatedAt: Date;
 }
