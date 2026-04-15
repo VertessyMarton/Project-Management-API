@@ -26,7 +26,11 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    return user;
+    if (user) {
+      const { password, ...result } = user;
+      return result;
+    }
+    return null;
   }
 
   async validateUser(email: string, password: string): Promise<any> {
