@@ -13,10 +13,15 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async createUser(email: string, password: string): Promise<any> {
+  async createUser(
+    name: string,
+    email: string,
+    password: string,
+  ): Promise<any> {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await this.userRepository.save({
+      name: name,
       email: email,
       password: hashedPassword,
     });
