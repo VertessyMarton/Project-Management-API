@@ -1,14 +1,19 @@
 import {
-  Body,
   Controller,
   Get,
   UseGuards,
   Request,
   Param,
+  UseInterceptors,
+  ClassSerializerInterceptor,
+  Patch,
+  Body,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
+import { UpdateMeDto } from './dto/update-me.dto';
 
+@UseInterceptors(ClassSerializerInterceptor)
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -24,5 +29,12 @@ export class UserController {
   @Get(':id')
   async getUser(@Param('id') id: number) {
     return this.userService.getMe(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('me')
+  async updateMe(@Request() req, @Body() dto: UpdateMeDto) {
+    const { userId } = req.user;
+    return this.userService.updateMe(userId, dto);
   }
 }
