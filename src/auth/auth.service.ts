@@ -6,6 +6,10 @@ import bcrypt from 'node_modules/bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import refreshJwtConfig from './config/refresh-jwt.config';
 import type { ConfigType } from '@nestjs/config';
+import { OtpService } from 'src/otp/otp.service';
+import { OtpEnum } from 'src/otp/enums/otp.enum';
+import { EmailService } from 'src/email/email.service';
+import { verificationEmailTemplate } from 'src/email/templates/verification-email.template';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +19,8 @@ export class AuthService {
     @Inject(refreshJwtConfig.KEY)
     private refreshTokenConfig: ConfigType<typeof refreshJwtConfig>,
     private jwtService: JwtService,
+    private otpService: OtpService,
+    private emailService: EmailService,
   ) {}
 
   async createUser(
@@ -30,10 +36,21 @@ export class AuthService {
       password: hashedPassword,
     });
 
+    const otp = await this.otpService.generateOtp(user, OtpEnum.OTP);
+
+    await this.emailService.sendEmail(
+      verificationEmailTemplate({
+        email: user.email,
+        otp,
+        name: user.name,
+      }),
+    );
+
     if (user) {
-      const { password, ...result } = user;
+      const { password, role, ...result } = user;
       return result;
     }
+
     return null;
   }
 

@@ -11,6 +11,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import jwtConfig from './config/jwt.config';
 import refreshJwtConfig from './config/refresh-jwt.config';
 import { RefreshJwtStrategy } from './strategies/refresh.strategy';
+import { EmailModule } from 'src/email/email.module';
+import { OtpModule } from 'src/otp/otp.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { RefreshJwtStrategy } from './strategies/refresh.strategy';
     JwtModule.registerAsync(jwtConfig.asProvider()),
     ConfigModule.forFeature(jwtConfig),
     ConfigModule.forFeature(refreshJwtConfig),
+    EmailModule,
+    OtpModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, LocalStrategy, JwtStrategy, RefreshJwtStrategy],
