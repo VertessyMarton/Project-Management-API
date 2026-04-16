@@ -21,8 +21,7 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getMe(@Request() req) {
-    const { userId } = req.user;
-    return this.userService.getMe(userId);
+    return this.userService.getMe(req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -34,7 +33,6 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Patch('me')
   async updateMe(@Request() req, @Body() dto: UpdateMeDto) {
-    const { userId } = req.user;
-    return this.userService.updateMe(userId, dto);
+    return this.userService.updateMe(req.user.id, dto);
   }
 }
