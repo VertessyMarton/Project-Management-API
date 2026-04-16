@@ -1,15 +1,19 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
 import bcrypt from 'node_modules/bcryptjs';
 import { JwtService } from '@nestjs/jwt';
+import refreshJwtConfig from './config/refresh-jwt.config';
+import type { ConfigType } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @Inject(refreshJwtConfig.KEY)
+    private refreshTokenConfig: ConfigType<typeof refreshJwtConfig>,
     private jwtService: JwtService,
   ) {}
 
@@ -51,9 +55,22 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { email: user.email, sub: user.id };
+    const payload = { sub: user.id };
+    const accessToken = this.jwtService.sign(payload);
+    const refreshToken = this.jwtService.sign(payload, this.refreshTokenConfig);
     return {
-      access_token: this.jwtService.sign(payload),
+      id: user.id,
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  refreshToken(userId: any) {
+    const payload = { sub: userId };
+    const accessToken = this.jwtService.sign(payload);
+    return {
+      id: userId,
+      accessToken: accessToken,
     };
   }
 }
