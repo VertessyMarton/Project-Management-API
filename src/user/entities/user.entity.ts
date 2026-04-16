@@ -25,6 +25,9 @@ export class User {
   @Column({ default: 'user' })
   role: string;
 
+  @Column({ default: 'unverified' })
+  verified: 'verified' | 'unverified';
+
   @CreateDateColumn()
   createdAt: Date;
 
