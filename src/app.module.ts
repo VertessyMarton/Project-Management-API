@@ -7,6 +7,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './user/entities/user.entity';
 import { UserModule } from './user/user.module';
 import { EmailModule } from './email/email.module';
+import { OtpModule } from './otp/otp.module';
+import { Otp } from './otp/entities/otp.entity';
 
 @Module({
   imports: [
@@ -23,7 +25,7 @@ import { EmailModule } from './email/email.module';
         username: configService.getOrThrow<string>('DB_USERNAME'),
         password: configService.getOrThrow<string>('DB_PASSWORD'),
         database: configService.getOrThrow<string>('DB_DATABASE'),
-        entities: [User],
+        entities: [User, Otp],
         synchronize:
           configService.getOrThrow<string>('NODE_ENV') !== 'production',
       }),
@@ -31,6 +33,7 @@ import { EmailModule } from './email/email.module';
     }),
     UserModule,
     EmailModule,
+    OtpModule,
   ],
   controllers: [AppController],
   providers: [AppService],
