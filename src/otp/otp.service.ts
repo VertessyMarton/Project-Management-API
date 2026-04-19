@@ -76,4 +76,40 @@ export class OtpService {
       return { message: 'Email verified successfully' };
     }
   }
+
+  async resendEmailVerification(email: string) {
+    const message =
+      'If an account exists and requires verification, a code will be sent';
+
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.otp', 'otp')
+      .select([
+        'user.id',
+        'user.name',
+        'user.status',
+        'otp.hashedOtp',
+        'otp.expiresAt',
+      ])
+      .where('user.email = :email', { email })
+      .getOne();
+
+    if (!user) {
+      return { message };
+    }
+
+    if (user.status === 'unverified') {
+      await this.otpRepository.delete({ user: { id: user.id } });
+      const otp = await this.generateOtp(user, OtpEnum.OTP);
+
+      await this.emailService.sendEmail(
+        verificationEmailTemplate({
+          email: email,
+          otp,
+          name: user.name,
+        }),
+      );
+    }
+    return { message };
+  }
 }
