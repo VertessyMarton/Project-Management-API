@@ -9,6 +9,7 @@ import { UserModule } from './user/user.module';
 import { EmailModule } from './email/email.module';
 import { OtpModule } from './otp/otp.module';
 import { Otp } from './otp/entities/otp.entity';
+import { ProjectModule } from './project/project.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { Otp } from './otp/entities/otp.entity';
     UserModule,
     EmailModule,
     OtpModule,
+    ProjectModule,
   ],
   controllers: [AppController],
   providers: [AppService],
