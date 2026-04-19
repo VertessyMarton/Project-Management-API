@@ -2,7 +2,7 @@ import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
-import bcrypt from 'node_modules/bcryptjs';
+import bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import refreshJwtConfig from './config/refresh-jwt.config';
 import type { ConfigType } from '@nestjs/config';
@@ -72,6 +72,10 @@ export class AuthService {
   }
 
   async login(user: any) {
+    if (user.status === 'unverified') {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     const payload = { sub: user.id };
     const accessToken = this.jwtService.sign(payload);
     const refreshToken = this.jwtService.sign(payload, this.refreshTokenConfig);
@@ -82,7 +86,7 @@ export class AuthService {
     };
   }
 
-  refreshToken(userId: any) {
+  refreshToken(userId: number) {
     const payload = { sub: userId };
     const accessToken = this.jwtService.sign(payload);
     return {
