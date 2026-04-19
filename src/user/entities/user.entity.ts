@@ -1,8 +1,10 @@
 import { Exclude } from 'class-transformer';
+import { Otp } from 'src/otp/entities/otp.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -22,11 +24,14 @@ export class User {
   @Column()
   password: string;
 
+  @OneToMany(() => Otp, (otp) => otp.user)
+  otp: Otp[];
+
   @Column({ default: 'user' })
   role: string;
 
   @Column({ default: 'unverified' })
-  verified: 'verified' | 'unverified';
+  status: 'verified' | 'unverified';
 
   @CreateDateColumn()
   createdAt: Date;

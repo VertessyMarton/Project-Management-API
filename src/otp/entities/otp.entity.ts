@@ -3,7 +3,6 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -14,8 +13,7 @@ export class Otp {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, { nullable: false })
-  @JoinColumn()
+  @ManyToOne(() => User, (user) => user.otp)
   user: User;
 
   @Column()
