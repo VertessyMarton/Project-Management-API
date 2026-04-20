@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -14,17 +15,18 @@ export class Otp {
   id: number;
 
   @ManyToOne(() => User, (user) => user.otp)
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column()
-  hashedOtp: string;
+  @Column({ name: 'otp_hash' })
+  otpHash: string;
 
   @Column({ type: 'enum', enum: OtpEnum })
   type: OtpEnum;
 
-  @Column()
+  @Column({ name: 'expires_at' })
   expiresAt: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }
