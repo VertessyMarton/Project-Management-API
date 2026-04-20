@@ -31,7 +31,7 @@ export class OtpService {
 
     await this.otpRepository.save({
       user,
-      hashedOtp: token,
+      otpHash: token,
       type,
       expiresAt,
     });
@@ -51,7 +51,7 @@ export class OtpService {
       throw new BadRequestException('Verification code is expired');
     }
 
-    const isMAtch = await bcrypt.compare(otp, token.hashedOtp);
+    const isMAtch = await bcrypt.compare(otp, token.otpHash);
 
     if (!isMAtch) {
       throw new BadRequestException('Invalid verification code');
@@ -88,7 +88,7 @@ export class OtpService {
         'user.id',
         'user.name',
         'user.status',
-        'otp.hashedOtp',
+        'otp.otpHash',
         'otp.expiresAt',
       ])
       .where('user.email = :email', { email })

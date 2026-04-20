@@ -10,6 +10,8 @@ import { EmailModule } from './email/email.module';
 import { OtpModule } from './otp/otp.module';
 import { Otp } from './otp/entities/otp.entity';
 import { ProjectModule } from './project/project.module';
+import { Project } from './project/entities/project.entity';
+import { ProjectMembers } from './project/entities/project-members.entity';
 
 @Module({
   imports: [
@@ -26,7 +28,7 @@ import { ProjectModule } from './project/project.module';
         username: configService.getOrThrow<string>('DB_USERNAME'),
         password: configService.getOrThrow<string>('DB_PASSWORD'),
         database: configService.getOrThrow<string>('DB_DATABASE'),
-        entities: [User, Otp],
+        entities: [User, Otp, Project, ProjectMembers],
         synchronize:
           configService.getOrThrow<string>('NODE_ENV') !== 'production',
       }),

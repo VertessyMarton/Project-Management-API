@@ -1,1 +1,37 @@
-export class Project {}
+import { User } from 'src/user/entities/user.entity';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { ProjectMembers } from './project-members.entity';
+
+@Entity()
+export class Project {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  name: string;
+
+  @Column()
+  description: string;
+
+  @ManyToOne(() => User, (user) => user.project)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
+
+  @OneToMany(() => ProjectMembers, (projectMembers) => projectMembers.project)
+  projectMembers: ProjectMembers[];
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+}
