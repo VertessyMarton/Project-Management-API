@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { UpdateMeDto } from './dto/update-me.dto';
+import { ProjectRoleEnum } from 'src/project/enums/project-role.enum';
+import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class UserService {
@@ -18,9 +20,13 @@ export class UserService {
   }
 
   async getUser(id: number) {
-    return await this.userRepository.findOne({
+    const user = await this.userRepository.findOne({
       where: { id: id },
     });
+    if (!user || user.role === 'admin') {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 
   async updateMe(userId: number, dto: UpdateMeDto) {
