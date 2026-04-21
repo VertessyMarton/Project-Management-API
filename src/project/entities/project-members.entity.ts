@@ -7,13 +7,16 @@ import {
 } from 'typeorm';
 import { Project } from './project.entity';
 import { User } from 'src/user/entities/user.entity';
+import { ProjectRoleEnum } from '../enums/project-role.enum';
 
 @Entity()
 export class ProjectMembers {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Project, (project) => project.projectMembers)
+  @ManyToOne(() => Project, (project) => project.projectMembers, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'project_id' })
   project: Project;
 
@@ -21,6 +24,6 @@ export class ProjectMembers {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column()
-  role: 'owner' | 'member' | 'viewer';
+  @Column({ type: 'enum', enum: ProjectRoleEnum })
+  role: ProjectRoleEnum;
 }

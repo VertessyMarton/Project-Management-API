@@ -48,4 +48,13 @@ export class ProjectController {
   ) {
     return await this.projectService.updateProject(id, req.user.id, dto);
   }
+
+  @Post(':projectId')
+  async addProjectMember(
+    @Request() req,
+    @Param('projectId') id: number,
+    @Body() dto: addMemberDto,
+  ) {
+    return await this.projectService.addProjectMember(id, dto, req.user.id);
+  }
 }
