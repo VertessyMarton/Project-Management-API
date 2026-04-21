@@ -39,4 +39,13 @@ export class ProjectController {
   async removeProject(@Param('projectId') id: number, @Request() req) {
     return await this.projectService.removeProject(id, req.user.id);
   }
+
+  @Patch(':projectId')
+  async updateProject(
+    @Request() req,
+    @Param('projectId') id: number,
+    @Body() dto: UpdateProjectDto,
+  ) {
+    return await this.projectService.updateProject(id, req.user.id, dto);
+  }
 }

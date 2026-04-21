@@ -75,4 +75,35 @@ export class ProjectService {
     }
     return { message: 'Project deleted' };
   }
+
+  async updateProject(id: number, userId: number, dto: UpdateProjectDto) {
+    const updateData: Partial<Pick<Project, 'name' | 'description'>> = {};
+
+    if ('name' in dto) {
+      updateData.name = dto.name;
+    }
+
+    if ('description' in dto) {
+      updateData.description = dto.description;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      throw new BadRequestException(
+        'At least one of name or description must be provided.',
+      );
+    }
+
+    const project = await this.projectRepository.update(
+      { id: id, user: { id: userId } },
+      updateData,
+    );
+
+    if (project.affected === 0) {
+      throw new NotFoundException('Project not found');
+    }
+
+    return await this.projectRepository.findOne({
+      where: { id: id },
+    });
+  }
 }
