@@ -3,8 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { UpdateMeDto } from './dto/update-me.dto';
-import { ProjectRoleEnum } from 'src/project/enums/project-role.enum';
-import { NotFoundError } from 'rxjs';
+import { UserRoleEnum } from './enums/user-role.enum';
 
 @Injectable()
 export class UserService {
@@ -23,7 +22,7 @@ export class UserService {
     const user = await this.userRepository.findOne({
       where: { id: id },
     });
-    if (!user || user.role === 'admin') {
+    if (!user || user.role === UserRoleEnum.ADMIN) {
       throw new NotFoundException('User not found');
     }
     return user;

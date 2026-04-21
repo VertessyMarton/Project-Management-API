@@ -11,6 +11,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { UserRoleEnum } from '../enums/user-role.enum';
 
 @Entity()
 export class User {
@@ -36,8 +37,8 @@ export class User {
   @OneToMany(() => ProjectMembers, (projectMembers) => projectMembers.user)
   projectMembers: ProjectMembers[];
 
-  @Column({ default: 'user' })
-  role: 'admin' | 'user';
+  @Column({ default: 'user', type: 'enum', enum: UserRoleEnum })
+  role: UserRoleEnum;
 
   @Column({ default: 'unverified' })
   status: 'verified' | 'unverified';
