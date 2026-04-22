@@ -3,6 +3,7 @@ import {
   CanActivate,
   ExecutionContext,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ProjectRoles } from '../decorators/project-roles.decorator';
@@ -24,6 +25,13 @@ export class ProjectRolesGuard implements CanActivate {
       return true;
     }
     const request = context.switchToHttp().getRequest();
+    const projectId = Number(request.params.projectId);
+
+    if (!Number.isInteger(projectId) || projectId <= 0) {
+      throw new BadRequestException(
+        'Validation failed (numeric string is expected)',
+      );
+    }
 
     const membership = await this.projectMemberRepository.findOne({
       where: {
@@ -35,8 +43,6 @@ export class ProjectRolesGuard implements CanActivate {
     if (!membership) {
       throw new NotFoundException('Resource not found');
     }
-
-    console.log(membership.role);
 
     return roles.includes(membership.role);
   }
