@@ -12,6 +12,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { UserRoleEnum } from '../enums/user-role.enum';
+import { Task } from 'src/task/entities/task.entity';
 
 @Entity()
 export class User {
@@ -37,7 +38,13 @@ export class User {
   @OneToMany(() => ProjectMembers, (projectMembers) => projectMembers.user)
   projectMembers: ProjectMembers[];
 
-  @Column({ default: 'user', type: 'enum', enum: UserRoleEnum })
+  @OneToMany(() => Task, (task) => task.createdBy)
+  createdTask: Task[];
+
+  @OneToMany(() => Task, (task) => task.assignee)
+  assignedTask: Task[];
+
+  @Column({ default: UserRoleEnum.USER, type: 'enum', enum: UserRoleEnum })
   role: UserRoleEnum;
 
   @Column({ default: 'unverified' })

@@ -13,6 +13,7 @@ import { ProjectModule } from './project/project.module';
 import { Project } from './project/entities/project.entity';
 import { ProjectMembers } from './project/entities/project-members.entity';
 import { TaskModule } from './task/task.module';
+import { Task } from './task/entities/task.entity';
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { TaskModule } from './task/task.module';
         username: configService.getOrThrow<string>('DB_USERNAME'),
         password: configService.getOrThrow<string>('DB_PASSWORD'),
         database: configService.getOrThrow<string>('DB_DATABASE'),
-        entities: [User, Otp, Project, ProjectMembers],
+        entities: [User, Otp, Project, ProjectMembers, Task],
         synchronize:
           configService.getOrThrow<string>('NODE_ENV') !== 'production',
       }),

@@ -10,6 +10,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { ProjectMembers } from './project-members.entity';
+import { Task } from 'src/task/entities/task.entity';
 
 @Entity()
 export class Project {
@@ -28,6 +29,9 @@ export class Project {
 
   @OneToMany(() => ProjectMembers, (projectMembers) => projectMembers.project)
   projectMembers: ProjectMembers[];
+
+  @OneToMany(() => Task, (task) => task.project)
+  task: Task[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
