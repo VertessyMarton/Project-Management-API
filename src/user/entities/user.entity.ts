@@ -13,6 +13,7 @@ import {
 } from 'typeorm';
 import { UserRoleEnum } from '../enums/user-role.enum';
 import { Task } from 'src/task/entities/task.entity';
+import { Comment } from 'src/comment/entities/comment.entity';
 
 @Entity()
 export class User {
@@ -43,6 +44,9 @@ export class User {
 
   @OneToMany(() => Task, (task) => task.assignee)
   assignedTask: Task[];
+
+  @OneToMany(() => Comment, (comment) => comment.author)
+  author: Comment[];
 
   @Column({ default: UserRoleEnum.USER, type: 'enum', enum: UserRoleEnum })
   role: UserRoleEnum;

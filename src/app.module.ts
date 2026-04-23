@@ -15,10 +15,10 @@ import { ProjectMembers } from './project/entities/project-members.entity';
 import { TaskModule } from './task/task.module';
 import { Task } from './task/entities/task.entity';
 import { CommentModule } from './comment/comment.module';
+import { Comment } from './comment/entities/comment.entity';
 
 @Module({
   imports: [
-    AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -31,12 +31,13 @@ import { CommentModule } from './comment/comment.module';
         username: configService.getOrThrow<string>('DB_USERNAME'),
         password: configService.getOrThrow<string>('DB_PASSWORD'),
         database: configService.getOrThrow<string>('DB_DATABASE'),
-        entities: [User, Otp, Project, ProjectMembers, Task],
+        entities: [User, Otp, Project, ProjectMembers, Task, Comment],
         synchronize:
           configService.getOrThrow<string>('NODE_ENV') !== 'production',
       }),
       inject: [ConfigService],
     }),
+    AuthModule,
     UserModule,
     EmailModule,
     OtpModule,

@@ -6,11 +6,14 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   RelationId,
   UpdateDateColumn,
 } from 'typeorm';
 import { TaskStatusEnum } from '../enums/task-status.enum';
+import { Comment } from 'src/comment/entities/comment.entity';
+import { CommentController } from 'src/comment/comment.controller';
 
 @Entity()
 export class Task {
@@ -57,6 +60,9 @@ export class Task {
 
   @RelationId((task: Task) => task.project)
   projectId: number;
+
+  @OneToMany(() => Comment, (comment) => comment.task)
+  comment: CommentController[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
