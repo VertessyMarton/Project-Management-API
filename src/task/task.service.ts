@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -14,7 +18,7 @@ export class TaskService {
   ) {}
 
   async createTask(dto: CreateTaskDto, createdById: number, projectId: number) {
-    const assignee = this.userRepository.findOne({
+    const assignee = await this.userRepository.findOne({
       where: { id: dto.assignee },
     });
 
@@ -22,7 +26,7 @@ export class TaskService {
       throw new NotFoundException('Resource not found');
     }
 
-    return await this.taskRepository.save({
+    const savedTask = await this.taskRepository.save({
       title: dto.title,
       description: dto.description,
       status: dto.status,
@@ -30,6 +34,9 @@ export class TaskService {
       createdBy: { id: createdById },
       project: { id: projectId },
       assignee: { id: dto.assignee },
+    });
+    return await this.taskRepository.findOne({
+      where: { id: savedTask.id },
     });
   }
 
@@ -54,11 +61,50 @@ export class TaskService {
     return task;
   }
 
-  update(id: number, updateTaskDto: UpdateTaskDto) {
-    return `This action updates a #${id} task`;
-  }
+  async updateTask(taskId: number, dto: UpdateTaskDto) {
+    const updateData: Partial<
+      Pick<Task, 'title' | 'description' | 'status' | 'dueDate' | 'assignee'>
+    > = {};
+    if ('title' in dto) {
+      updateData.title = dto.title;
+    }
+    if ('description' in dto) {
+      updateData.description = dto.description;
+    }
+    if ('status' in dto) {
+      updateData.status = dto.status;
+    }
+    if ('dueDate' in dto) {
+      updateData.dueDate = dto.dueDate;
+    }
+    if (dto.assignee !== undefined) {
+      if (dto.assignee === null) {
+        updateData.assignee = null;
+      } else {
+        const user = await this.userRepository.findOneBy({ id: dto.assignee });
 
-  remove(id: number) {
-    return `This action removes a #${id} task`;
+        if (!user) {
+          throw new NotFoundException('Assignee not found');
+        }
+
+        updateData.assignee = user;
+      }
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      throw new BadRequestException(
+        'At least one of the fields must be provided.',
+      );
+    }
+
+    const task = await this.taskRepository.update({ id: taskId }, updateData);
+
+    if (task.affected === 0) {
+      throw new NotFoundException('Project not found');
+    }
+
+    return await this.taskRepository.findOne({
+      where: { id: taskId },
+    });
   }
 }

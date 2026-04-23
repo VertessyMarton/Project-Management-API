@@ -47,13 +47,9 @@ export class TaskController {
     return this.taskService.findOneTask(projectId, taskId);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {
-    return this.taskService.update(+id, updateTaskDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.taskService.remove(+id);
+  @ProjectRoles(['owner', 'member'])
+  @Patch(':projectId/tasks/:taskId')
+  updateTask(@Param('taskId') id: number, @Body() dto: UpdateTaskDto) {
+    return this.taskService.updateTask(id, dto);
   }
 }
