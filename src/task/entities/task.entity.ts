@@ -7,6 +7,7 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  RelationId,
   UpdateDateColumn,
 } from 'typeorm';
 import { TaskStatusEnum } from '../enums/task-status.enum';
@@ -37,13 +38,25 @@ export class Task {
   @JoinColumn({ name: 'created_by_id' })
   createdBy: User;
 
-  @ManyToOne(() => User, (user) => user.assignedTask, { nullable: true })
-  @JoinColumn({ name: 'assignee_id' })
-  assignee: User;
+  @RelationId((task: Task) => task.createdBy)
+  createdById: number;
 
-  @ManyToOne(() => Project, (project) => project.task)
+  @ManyToOne(() => User, (user) => user.assignedTask, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'assignee_id' })
+  assignee: User | null;
+
+  @RelationId((task: Task) => task.assignee)
+  assigneeId: number | null;
+
+  @ManyToOne(() => Project, (project) => project.task, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'project_id' })
   project: Project;
+
+  @RelationId((task: Task) => task.project)
+  projectId: number;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

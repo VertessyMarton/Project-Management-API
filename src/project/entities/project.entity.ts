@@ -23,7 +23,7 @@ export class Project {
   @Column()
   description: string;
 
-  @ManyToOne(() => User, (user) => user.project)
+  @ManyToOne(() => User, (user) => user.project, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
