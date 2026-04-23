@@ -52,4 +52,10 @@ export class TaskController {
   updateTask(@Param('taskId') id: number, @Body() dto: UpdateTaskDto) {
     return this.taskService.updateTask(id, dto);
   }
+
+  @ProjectRoles(['owner', 'member'])
+  @Delete(':projectId/tasks/:taskId')
+  removeTask(@Param('taskId') id: number) {
+    return this.taskService.removeTask(id);
+  }
 }

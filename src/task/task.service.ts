@@ -107,4 +107,9 @@ export class TaskService {
       where: { id: taskId },
     });
   }
+
+  async removeTask(TaskId: number) {
+    await this.taskRepository.delete(TaskId);
+    return { message: 'Task deleted' };
+  }
 }
