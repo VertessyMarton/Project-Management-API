@@ -14,6 +14,7 @@ import { Project } from './project/entities/project.entity';
 import { ProjectMembers } from './project/entities/project-members.entity';
 import { TaskModule } from './task/task.module';
 import { Task } from './task/entities/task.entity';
+import { CommentModule } from './comment/comment.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { Task } from './task/entities/task.entity';
     OtpModule,
     ProjectModule,
     TaskModule,
+    CommentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
