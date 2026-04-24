@@ -4,14 +4,22 @@ import { AdminUserController } from './controllers/admin-user.controller';
 import { AdminProjectController } from './controllers/admin-project.controller';
 import { AdminTaskUserController } from './controllers/admin-task.controller';
 import { AdminCommentController } from './controllers/admin-comment.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from 'src/user/entities/user.entity';
+import { Project } from 'src/project/entities/project.entity';
+import { Task } from 'src/task/entities/task.entity';
+import { Comment } from 'src/comment/entities/comment.entity';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
 
 @Module({
+  imports: [TypeOrmModule.forFeature([User, Project, Task, Comment])],
   controllers: [
     AdminUserController,
     AdminProjectController,
     AdminTaskUserController,
     AdminCommentController,
   ],
-  providers: [AdminService],
+  providers: [AdminService, JwtAuthGuard, RolesGuard],
 })
 export class AdminModule {}

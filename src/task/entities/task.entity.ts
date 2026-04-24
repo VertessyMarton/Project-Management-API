@@ -37,7 +37,7 @@ export class Task {
   @Column({ name: 'due_date', nullable: true })
   dueDate: Date;
 
-  @ManyToOne(() => User, (user) => user.createdTask)
+  @ManyToOne(() => User, (user) => user.createdTask, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'created_by_id' })
   createdBy: User;
 

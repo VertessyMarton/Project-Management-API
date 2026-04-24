@@ -17,7 +17,6 @@ import { Task } from './task/entities/task.entity';
 import { CommentModule } from './comment/comment.module';
 import { Comment } from './comment/entities/comment.entity';
 import { AdminModule } from './admin/admin.module';
-import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
