@@ -1,26 +1,68 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Comment } from './entities/comment.entity';
+import { Repository } from 'typeorm';
+import { Task } from 'src/task/entities/task.entity';
 
 @Injectable()
 export class CommentService {
-  create(createCommentDto: CreateCommentDto) {
-    return 'This action adds a new comment';
+  constructor(
+    @InjectRepository(Comment) private commentRepository: Repository<Comment>,
+    @InjectRepository(Task) private taskRepository: Repository<Task>,
+  ) {}
+
+  async createComment(
+    dto: CreateCommentDto,
+    userId: number,
+    taskId: number,
+    projectId: number,
+  ) {
+    const task = await this.taskRepository.findOne({ where: { id: taskId } });
+    if (task?.projectId !== +projectId) {
+      throw new NotFoundException('Resource not found');
+    }
+
+    const comment = await this.commentRepository.save({
+      content: dto.content,
+      author: { id: userId },
+      task: { id: taskId },
+    });
+    return comment;
   }
 
-  findAll() {
-    return `This action returns all comment`;
+  async findAllComment(taskId: number) {
+    return await this.commentRepository.find({
+      where: { task: { id: taskId } },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} comment`;
+  async findOneComment(commentId: number) {
+    const comment = await this.commentRepository.findOne({
+      where: { id: commentId },
+    });
+    if (!comment) {
+      throw new NotFoundException('Resource not found');
+    }
+    return comment;
   }
 
-  update(id: number, updateCommentDto: UpdateCommentDto) {
-    return `This action updates a #${id} comment`;
+  async update(commentId: number, dto: UpdateCommentDto) {
+    const comment = await this.commentRepository.update(commentId, {
+      content: dto.content,
+    });
+    if (comment.affected === 0) {
+      throw new NotFoundException('Resource not found');
+    }
+    return await this.commentRepository.findOne({ where: { id: commentId } });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} comment`;
+  async remove(commentId: number) {
+    const comment = await this.commentRepository.delete(commentId);
+    if (comment.affected === 0) {
+      throw new NotFoundException('Resource not found');
+    }
+    return { message: 'Comment deleted' };
   }
 }
