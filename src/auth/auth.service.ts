@@ -10,6 +10,7 @@ import { OtpService } from 'src/otp/otp.service';
 import { OtpEnum } from 'src/otp/enums/otp.enum';
 import { EmailService } from 'src/email/email.service';
 import { verificationEmailTemplate } from 'src/email/templates/verification-email.template';
+import { ValidateUserDto } from './dto/validate-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -54,16 +55,16 @@ export class AuthService {
     return null;
   }
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(dto: ValidateUserDto): Promise<any> {
     const user = await this.userRepository.findOne({
-      where: { email: email },
+      where: { email: dto.email },
     });
 
     if (!user) {
       return null;
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
 
     if (isPasswordValid) {
       const { password, ...result } = user;
