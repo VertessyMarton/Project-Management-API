@@ -97,4 +97,20 @@ export class AdminService {
     }
     return { message: 'Task deleted' };
   }
+
+  async findAllComment() {
+    const comments = await this.commentRepository.find();
+    if (!comments) {
+      throw new NotFoundException('Comment not found');
+    }
+    return comments;
+  }
+
+  async deleteComment(commentId: number) {
+    const comment = await this.commentRepository.delete(commentId);
+    if (comment.affected === 0) {
+      throw new NotFoundException('Comment not found');
+    }
+    return { message: 'Comment deleted' };
+  }
 }
