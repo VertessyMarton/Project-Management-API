@@ -73,4 +73,28 @@ export class AdminService {
     }
     return { message: 'Project deleted' };
   }
+
+  async findAllTask() {
+    const tasks = await this.taskRepository.find();
+    if (!tasks) {
+      throw new NotFoundException('Task not found');
+    }
+    return tasks;
+  }
+
+  async findOneTask(taskId: number) {
+    const task = await this.taskRepository.findOne({ where: { id: taskId } });
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+    return task;
+  }
+
+  async deleteTask(taskId: number) {
+    const task = await this.taskRepository.delete(taskId);
+    if (task.affected === 0) {
+      throw new NotFoundException('Task not found');
+    }
+    return { message: 'Task deleted' };
+  }
 }

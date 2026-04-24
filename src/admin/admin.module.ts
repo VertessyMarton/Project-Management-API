@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AdminUserController } from './controllers/admin-user.controller';
 import { AdminProjectController } from './controllers/admin-project.controller';
-import { AdminTaskUserController } from './controllers/admin-task.controller';
+import { AdminTaskController } from './controllers/admin-task.controller';
 import { AdminCommentController } from './controllers/admin-comment.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
@@ -17,7 +17,7 @@ import { RolesGuard } from 'src/common/guards/roles.guard';
   controllers: [
     AdminUserController,
     AdminProjectController,
-    AdminTaskUserController,
+    AdminTaskController,
     AdminCommentController,
   ],
   providers: [AdminService, JwtAuthGuard, RolesGuard],
