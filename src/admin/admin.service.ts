@@ -47,4 +47,30 @@ export class AdminService {
     }
     return { message: 'user deleted' };
   }
+
+  async findAllProject() {
+    const projects = await this.projectRepository.find();
+    if (!projects) {
+      throw new NotFoundException('Project not found');
+    }
+    return projects;
+  }
+
+  async findOneProject(projectId: number) {
+    const projects = await this.projectRepository.findOne({
+      where: { id: projectId },
+    });
+    if (!projects) {
+      throw new NotFoundException('Project not found');
+    }
+    return projects;
+  }
+
+  async deleteProject(projectId: number) {
+    const project = await this.projectRepository.delete(projectId);
+    if (project.affected === 0) {
+      throw new NotFoundException('Project not found');
+    }
+    return { message: 'Project deleted' };
+  }
 }
