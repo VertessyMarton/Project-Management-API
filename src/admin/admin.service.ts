@@ -113,4 +113,20 @@ export class AdminService {
     }
     return { message: 'Comment deleted' };
   }
+
+  async getStats() {
+    const [users, projects, tasks, comments] = await Promise.all([
+      this.userRepository.count(),
+      this.projectRepository.count(),
+      this.taskRepository.count(),
+      this.commentRepository.count(),
+    ]);
+
+    return {
+      users,
+      projects,
+      tasks,
+      comments,
+    };
+  }
 }

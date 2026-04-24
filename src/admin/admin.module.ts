@@ -11,6 +11,7 @@ import { Task } from 'src/task/entities/task.entity';
 import { Comment } from 'src/comment/entities/comment.entity';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
+import { AdminStatController } from './controllers/admin-stats.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User, Project, Task, Comment])],
@@ -19,6 +20,7 @@ import { RolesGuard } from 'src/common/guards/roles.guard';
     AdminProjectController,
     AdminTaskController,
     AdminCommentController,
+    AdminStatController,
   ],
   providers: [AdminService, JwtAuthGuard, RolesGuard],
 })
