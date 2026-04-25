@@ -36,7 +36,7 @@ export class ProjectRolesGuard implements CanActivate {
     const membership = await this.projectMemberRepository.findOne({
       where: {
         user: { id: request.user.id },
-        project: { id: request.params.projectId },
+        project: { id: projectId },
       },
     });
 

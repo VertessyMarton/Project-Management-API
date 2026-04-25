@@ -14,8 +14,10 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { addMemberDto } from './dto/add-member.dto';
+import { ProjectRolesGuard } from 'src/common/guards/project-roles.guard';
+import { ProjectRoles } from 'src/common/decorators/project-roles.decorator';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ProjectRolesGuard)
 @Controller('projects')
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
@@ -49,12 +51,12 @@ export class ProjectController {
     return await this.projectService.updateProject(id, req.user.id, dto);
   }
 
+  @ProjectRoles(['owner'])
   @Post(':projectId')
   async addProjectMember(
-    @Request() req,
     @Param('projectId') id: number,
     @Body() dto: addMemberDto,
   ) {
-    return await this.projectService.addProjectMember(id, dto, req.user.id);
+    return await this.projectService.addProjectMember(id, dto);
   }
 }

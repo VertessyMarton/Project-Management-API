@@ -107,25 +107,13 @@ export class ProjectService {
     });
   }
 
-  async addProjectMember(projectId: number, dto: addMemberDto, userId: number) {
+  async addProjectMember(projectId: number, dto: addMemberDto) {
     const user = await this.userRepository.findOne({
       where: { email: dto.email },
     });
 
     if (!user) {
       throw new BadRequestException('User cannot be added to project');
-    }
-
-    if (user.id === userId) {
-      throw new BadRequestException('Cannot add yourself to the project');
-    }
-
-    const project = await this.projectRepository.findOne({
-      where: { id: projectId },
-    });
-
-    if (!project) {
-      throw new NotFoundException('Project not found');
     }
 
     const hasRole = await this.projectMemberRepository.findOne({
