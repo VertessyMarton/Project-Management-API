@@ -1,6 +1,6 @@
 import { IsEmail, IsString } from 'class-validator';
 
-export class resendVerificationDto {
+export class ResendVerificationDto {
   @IsString()
   @IsEmail()
   email: string;

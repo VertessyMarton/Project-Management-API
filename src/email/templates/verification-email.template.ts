@@ -1,4 +1,4 @@
-import { sendEmailDto } from '../dto/email.dto';
+import { SendEmailDto } from '../dto/email.dto';
 
 type Params = {
   email: string;
@@ -10,7 +10,7 @@ export function verificationEmailTemplate({
   email,
   otp,
   name,
-}: Params): sendEmailDto {
+}: Params): SendEmailDto {
   const greeting = name ? `Hi ${name},` : 'Hi,';
 
   return {

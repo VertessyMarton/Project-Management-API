@@ -13,7 +13,7 @@ import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
-import { addMemberDto } from './dto/add-member.dto';
+import { AddMemberDto } from './dto/add-member.dto';
 import { ProjectRolesGuard } from 'src/common/guards/project-roles.guard';
 import { ProjectRoles } from 'src/common/decorators/project-roles.decorator';
 
@@ -55,7 +55,7 @@ export class ProjectController {
   @Post(':projectId')
   async addProjectMember(
     @Param('projectId') id: number,
-    @Body() dto: addMemberDto,
+    @Body() dto: AddMemberDto,
   ) {
     return await this.projectService.addProjectMember(id, dto);
   }

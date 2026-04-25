@@ -6,7 +6,7 @@ import {
   Matches,
 } from 'class-validator';
 
-export class verifyEmailDto {
+export class VerifyEmailDto {
   @IsString()
   @IsEmail()
   email: string;

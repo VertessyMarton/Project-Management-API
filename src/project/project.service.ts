@@ -12,7 +12,7 @@ import { Repository } from 'typeorm';
 import { ProjectMembers } from './entities/project-members.entity';
 import { ProjectRoleEnum } from './enums/project-role.enum';
 import { User } from 'src/user/entities/user.entity';
-import { addMemberDto } from './dto/add-member.dto';
+import { AddMemberDto } from './dto/add-member.dto';
 
 @Injectable()
 export class ProjectService {
@@ -107,7 +107,7 @@ export class ProjectService {
     });
   }
 
-  async addProjectMember(projectId: number, dto: addMemberDto) {
+  async addProjectMember(projectId: number, dto: AddMemberDto) {
     const user = await this.userRepository.findOne({
       where: { email: dto.email },
     });
