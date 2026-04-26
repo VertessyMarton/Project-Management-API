@@ -12,6 +12,8 @@ import { OtpEnum } from './enums/otp.enum';
 import { User } from 'src/user/entities/user.entity';
 import { verificationEmailTemplate } from 'src/email/templates/verification-email.template';
 import { EmailService } from 'src/email/email.service';
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ResendVerificationDto } from './dto/resend-verification.dto';
 
 @Injectable()
 export class OtpService {
@@ -59,25 +61,27 @@ export class OtpService {
     return isMAtch;
   }
 
-  async verifyEmail(email: string, otp: string) {
+  async verifyEmail(dto: VerifyEmailDto) {
     const message = 'Unable to verify email with the provided information';
-    const user = await this.userRepository.findOne({ where: { email } });
+    const user = await this.userRepository.findOne({
+      where: { email: dto.email },
+    });
 
     if (!user) {
-      return { message };
+      throw new BadRequestException(message);
     }
 
     if (user.status === 'verified') {
-      return { message };
+      throw new BadRequestException(message);
     } else if (user.status === 'unverified') {
-      await this.validateOtp(user.id, otp);
+      await this.validateOtp(user.id, dto.otp);
       await this.userRepository.update(user.id, { status: 'verified' });
       await this.otpRepository.delete({ user: { id: user.id } });
       return { message: 'Email verified successfully' };
     }
   }
 
-  async resendEmailVerification(email: string) {
+  async resendEmailVerification(dto: ResendVerificationDto) {
     const message =
       'If an account exists and requires verification, a code will be sent';
 
@@ -91,11 +95,11 @@ export class OtpService {
         'otp.otpHash',
         'otp.expiresAt',
       ])
-      .where('user.email = :email', { email })
+      .where('user.email = :email', { email: dto.email })
       .getOne();
 
     if (!user) {
-      return { message };
+      throw new BadRequestException(message);
     }
 
     if (user.status === 'unverified') {
@@ -104,7 +108,7 @@ export class OtpService {
 
       await this.emailService.sendEmail(
         verificationEmailTemplate({
-          email: email,
+          email: dto.email,
           otp,
           name: user.name,
         }),

@@ -11,12 +11,16 @@ import { LocalAuthGuard } from './guards/local.guard';
 import { RegisterDto } from './dto/register.dto';
 import { RefreshAuthGuard } from './guards/refresh-jwt.guard';
 import { RegisterResponseDto } from './dto/register-response.dto';
+import { SwaggerRegisterDocs } from 'src/common/decorators/swagger/register-docs.decorator';
 import { LoginResponseDto } from './dto/login-response.dto';
+import { SwaggerLoginDocs } from 'src/common/decorators/swagger/login-docs.decorator';
+import { SwaggerRefreshDocs } from 'src/common/decorators/swagger/refresh-docs.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @SwaggerRegisterDocs()
   @Post('register')
   async createUser(@Body() dto: RegisterDto) {
     const user = await this.authService.createUser(
@@ -27,6 +31,7 @@ export class AuthController {
     return new RegisterResponseDto(user);
   }
 
+  @SwaggerLoginDocs()
   @HttpCode(200)
   @UseGuards(LocalAuthGuard)
   @Post('login')
@@ -35,6 +40,7 @@ export class AuthController {
     return new LoginResponseDto(loginResult);
   }
 
+  @SwaggerRefreshDocs()
   @HttpCode(200)
   @UseGuards(RefreshAuthGuard)
   @Post('refresh')
