@@ -45,7 +45,6 @@ export class Task {
   createdById: number;
 
   @ManyToOne(() => User, (user) => user.assignedTask, {
-    nullable: true,
     onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'assignee_id' })
@@ -54,7 +53,10 @@ export class Task {
   @RelationId((task: Task) => task.assignee)
   assigneeId: number | null;
 
-  @ManyToOne(() => Project, (project) => project.task, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Project, (project) => project.task, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'project_id' })
   project: Project;
 
@@ -62,7 +64,7 @@ export class Task {
   projectId: number;
 
   @OneToMany(() => Comment, (comment) => comment.task)
-  comment: CommentController[];
+  comment: Comment[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

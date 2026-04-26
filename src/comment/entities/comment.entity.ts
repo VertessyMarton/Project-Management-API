@@ -19,14 +19,20 @@ export class Comment {
   @Column()
   content: string;
 
-  @ManyToOne(() => User, (user) => user.author, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.author, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'author_id' })
   author: User;
 
   @RelationId((comment: Comment) => comment.author)
   authorId: number;
 
-  @ManyToOne(() => Task, (task) => task.comment, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Task, (task) => task.comment, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'task_id' })
   task: Task;
 
