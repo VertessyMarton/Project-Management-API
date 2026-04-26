@@ -1,4 +1,9 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
@@ -11,6 +16,7 @@ import { OtpEnum } from 'src/otp/enums/otp.enum';
 import { EmailService } from 'src/email/email.service';
 import { verificationEmailTemplate } from 'src/email/templates/verification-email.template';
 import { ValidateUserDto } from './dto/validate-user.dto';
+import { AuthenticatedUser, LoginResult } from './types/login-result.type';
 
 @Injectable()
 export class AuthService {
@@ -28,7 +34,14 @@ export class AuthService {
     name: string,
     email: string,
     password: string,
-  ): Promise<any> {
+  ): Promise<User> {
+    const isUnique = await this.userRepository.findOne({
+      where: { email: email },
+    });
+    if (isUnique) {
+      throw new BadRequestException('Email already has been used');
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await this.userRepository.save({
@@ -47,12 +60,7 @@ export class AuthService {
       }),
     );
 
-    if (user) {
-      const { password, role, ...result } = user;
-      return result;
-    }
-
-    return null;
+    return user;
   }
 
   async validateUser(dto: ValidateUserDto): Promise<any> {
@@ -72,7 +80,7 @@ export class AuthService {
     }
   }
 
-  async login(user: any) {
+  async login(user: AuthenticatedUser): Promise<LoginResult> {
     if (user.status === 'unverified') {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -81,7 +89,7 @@ export class AuthService {
     const accessToken = this.jwtService.sign(payload);
     const refreshToken = this.jwtService.sign(payload, this.refreshTokenConfig);
     return {
-      id: user.id,
+      user,
       accessToken,
       refreshToken,
     };
