@@ -1,8 +1,8 @@
 {
-  "name": "Task Manager API",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "name": "project-manager-api",
+  "version": "0.16.12",
+  "description": "a project management API built with NestJS, TypeORM, and PostgreSQL",
+  "author": "Vértessy Márton <vertessy.marton@gmail.com>",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
