@@ -16,12 +16,20 @@ import { UpdateCommentDto } from './dto/update-comment.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { ProjectRolesGuard } from 'src/common/guards/project-roles.guard';
 import { ProjectRoles } from 'src/common/decorators/project-roles.decorator';
+import {
+  CreateCommentDocs,
+  FindAllCommentDocs,
+  FindOneCommentDocs,
+  RemoveCommentDocs,
+  UpdateCommentDocs,
+} from 'src/common/decorators/swagger/comment-docs.decorator';
 
 @UseGuards(JwtAuthGuard, ProjectRolesGuard)
 @Controller('projects/:projectId/tasks/:taskId/comments')
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
+  @CreateCommentDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
   @Post()
   async createComment(
@@ -38,18 +46,21 @@ export class CommentController {
     );
   }
 
+  @FindAllCommentDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
   @Get()
   async findAllComment(@Param('taskId', ParseIntPipe) taskId: number) {
     return await this.commentService.findAllComment(taskId);
   }
 
+  @FindOneCommentDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
   @Get(':commentId')
   async findOneComment(@Param('commentId', ParseIntPipe) commentId: string) {
     return await this.commentService.findOneComment(+commentId);
   }
 
+  @UpdateCommentDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
   @Patch(':commentId')
   async updateComment(
@@ -59,6 +70,7 @@ export class CommentController {
     return await this.commentService.update(+commentId, dto);
   }
 
+  @RemoveCommentDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
   @Delete(':commentId')
   async removeComment(@Param('commentId') commentId: string) {

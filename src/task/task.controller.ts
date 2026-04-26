@@ -16,12 +16,20 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { ProjectRolesGuard } from 'src/common/guards/project-roles.guard';
 import { ProjectRoles } from 'src/common/decorators/project-roles.decorator';
+import {
+  CreateTaskDocs,
+  FindAllTaskDocs,
+  FindOneTaskDocs,
+  RemoveTaskDocs,
+  UpdateTaskDocs,
+} from 'src/common/decorators/swagger/task-docs.decorator';
 
 @UseGuards(JwtAuthGuard, ProjectRolesGuard)
 @Controller('projects')
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
+  @CreateTaskDocs()
   @ProjectRoles(['owner', 'member'])
   @Post(':projectId/tasks')
   async createTask(
@@ -32,12 +40,14 @@ export class TaskController {
     return await this.taskService.createTask(dto, req.user.id, id);
   }
 
+  @FindAllTaskDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
   @Get(':projectId/tasks')
   findAllTask(@Param('projectId') id: number) {
     return this.taskService.findAllTask(id);
   }
 
+  @FindOneTaskDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
   @Get(':projectId/tasks/:taskId')
   findOneTask(
@@ -47,12 +57,14 @@ export class TaskController {
     return this.taskService.findOneTask(projectId, taskId);
   }
 
+  @UpdateTaskDocs()
   @ProjectRoles(['owner', 'member'])
   @Patch(':projectId/tasks/:taskId')
   updateTask(@Param('taskId') id: number, @Body() dto: UpdateTaskDto) {
     return this.taskService.updateTask(id, dto);
   }
 
+  @RemoveTaskDocs()
   @ProjectRoles(['owner', 'member'])
   @Delete(':projectId/tasks/:taskId')
   removeTask(@Param('taskId') id: number) {
