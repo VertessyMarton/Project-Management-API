@@ -33,8 +33,7 @@ import { AdminModule } from './admin/admin.module';
         password: configService.getOrThrow<string>('DB_PASSWORD'),
         database: configService.getOrThrow<string>('DB_DATABASE'),
         entities: [User, Otp, Project, ProjectMembers, Task, Comment],
-        synchronize:
-          configService.getOrThrow<string>('NODE_ENV') !== 'production',
+        synchronize: false,
       }),
       inject: [ConfigService],
     }),
