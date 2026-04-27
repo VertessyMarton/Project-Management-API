@@ -40,7 +40,7 @@ export class ProjectService {
     return project;
   }
 
-  async getPrtoject(id: number, userId: number) {
+  async getProject(id: number, userId: number) {
     const project = await this.projectRepository.findOne({
       where: {
         id: id,

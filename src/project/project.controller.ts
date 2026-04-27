@@ -39,7 +39,7 @@ export class ProjectController {
   @GetProjectDocs()
   @Get(':projectId')
   async getProject(@Request() req, @Param('projectId') id: number) {
-    return await this.projectService.getPrtoject(id, req.user.id);
+    return await this.projectService.getProject(id, req.user.id);
   }
 
   @GetAllProjectDocs()
