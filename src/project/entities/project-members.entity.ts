@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -9,6 +10,7 @@ import { Project } from './project.entity';
 import { User } from 'src/user/entities/user.entity';
 import { ProjectRoleEnum } from '../enums/project-role.enum';
 
+@Index(['project', 'user'], { unique: true })
 @Entity()
 export class ProjectMembers {
   @PrimaryGeneratedColumn()

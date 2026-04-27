@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
@@ -53,6 +54,7 @@ export class Task {
   @RelationId((task: Task) => task.assignee)
   assigneeId: number | null;
 
+  @Index()
   @ManyToOne(() => Project, (project) => project.task, {
     nullable: false,
     onDelete: 'CASCADE',

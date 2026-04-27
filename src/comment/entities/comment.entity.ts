@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -29,6 +30,7 @@ export class Comment {
   @RelationId((comment: Comment) => comment.author)
   authorId: number;
 
+  @Index()
   @ManyToOne(() => Task, (task) => task.comment, {
     nullable: false,
     onDelete: 'CASCADE',
