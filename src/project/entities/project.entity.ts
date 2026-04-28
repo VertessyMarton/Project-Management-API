@@ -24,14 +24,6 @@ export class Project {
   @Column()
   description: string;
 
-  @Index()
-  @ManyToOne(() => User, (user) => user.project, {
-    nullable: false,
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'user_id' })
-  user: User;
-
   @OneToMany(() => ProjectMembers, (projectMembers) => projectMembers.project)
   projectMembers: ProjectMembers[];
 

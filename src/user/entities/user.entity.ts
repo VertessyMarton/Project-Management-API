@@ -33,9 +33,6 @@ export class User {
   @OneToMany(() => Otp, (otp) => otp.user)
   otp: Otp[];
 
-  @OneToMany(() => Project, (project) => project.user)
-  project: Project[];
-
   @OneToMany(() => ProjectMembers, (projectMembers) => projectMembers.user)
   projectMembers: ProjectMembers[];
 
