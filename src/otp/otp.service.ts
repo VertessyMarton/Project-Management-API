@@ -106,7 +106,7 @@ export class OtpService {
       await this.otpRepository.delete({ user: { id: user.id } });
       const otp = await this.generateOtp(user, OtpEnum.OTP);
 
-      await this.emailService.sendEmail(
+      this.emailService.sendEmail(
         verificationEmailTemplate({
           email: dto.email,
           otp,

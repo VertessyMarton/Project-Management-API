@@ -52,7 +52,7 @@ export class AuthService {
 
     const otp = await this.otpService.generateOtp(user, OtpEnum.OTP);
 
-    await this.emailService.sendEmail(
+    this.emailService.sendEmail(
       verificationEmailTemplate({
         email: user.email,
         otp,
