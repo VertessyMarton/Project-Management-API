@@ -106,13 +106,17 @@ export class OtpService {
       await this.otpRepository.delete({ user: { id: user.id } });
       const otp = await this.generateOtp(user, OtpEnum.OTP);
 
-      this.emailService.sendEmail(
-        verificationEmailTemplate({
-          email: dto.email,
-          otp,
-          name: user.name,
-        }),
-      );
+      this.emailService
+        .sendEmail(
+          verificationEmailTemplate({
+            email: dto.email,
+            otp,
+            name: user.name,
+          }),
+        )
+        .catch((err) => {
+          console.error('Sending email failed:', err);
+        });
     }
     return { message };
   }

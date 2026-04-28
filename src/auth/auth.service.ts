@@ -52,13 +52,17 @@ export class AuthService {
 
     const otp = await this.otpService.generateOtp(user, OtpEnum.OTP);
 
-    this.emailService.sendEmail(
-      verificationEmailTemplate({
-        email: user.email,
-        otp,
-        name: user.name,
-      }),
-    );
+    this.emailService
+      .sendEmail(
+        verificationEmailTemplate({
+          email: user.email,
+          otp,
+          name: user.name,
+        }),
+      )
+      .catch((err) => {
+        console.error('Sending email failed:', err);
+      });
 
     return user;
   }
