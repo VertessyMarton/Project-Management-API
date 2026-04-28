@@ -8,7 +8,7 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Project } from './entities/project.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { ProjectMembers } from './entities/project-members.entity';
 import { ProjectRoleEnum } from './enums/project-role.enum';
 import { User } from 'src/user/entities/user.entity';
@@ -28,7 +28,6 @@ export class ProjectService {
     const project = await this.projectRepository.save({
       name: dto.name,
       description: dto.description,
-      user: { id: userId },
     });
 
     await this.projectMemberRepository.save({
@@ -40,11 +39,10 @@ export class ProjectService {
     return project;
   }
 
-  async getProject(id: number, userId: number) {
+  async getProject(id: number) {
     const project = await this.projectRepository.findOne({
       where: {
         id: id,
-        user: { id: userId },
       },
     });
 
@@ -56,18 +54,18 @@ export class ProjectService {
   }
 
   async getAllProject(userId: number) {
-    const projects = await this.projectRepository.find({
+    return await this.projectRepository.find({
       where: {
-        user: { id: userId },
+        projectMembers: {
+          user: { id: userId },
+        },
       },
     });
-    return projects;
   }
 
-  async removeProject(id: number, userId: number) {
+  async removeProject(id: number) {
     const project = await this.projectRepository.delete({
       id,
-      user: { id: userId },
     });
 
     if (project.affected === 0) {
@@ -76,7 +74,7 @@ export class ProjectService {
     return { message: 'Project deleted' };
   }
 
-  async updateProject(id: number, userId: number, dto: UpdateProjectDto) {
+  async updateProject(id: number, dto: UpdateProjectDto) {
     const updateData: Partial<Pick<Project, 'name' | 'description'>> = {};
 
     if ('name' in dto) {
@@ -93,10 +91,7 @@ export class ProjectService {
       );
     }
 
-    const project = await this.projectRepository.update(
-      { id: id, user: { id: userId } },
-      updateData,
-    );
+    const project = await this.projectRepository.update({ id: id }, updateData);
 
     if (project.affected === 0) {
       throw new NotFoundException('Project not found');
@@ -122,6 +117,8 @@ export class ProjectService {
         user: { id: user.id },
       },
     });
+
+    console.log(hasRole);
 
     if (hasRole) {
       throw new ForbiddenException('Cannot add user to the project');

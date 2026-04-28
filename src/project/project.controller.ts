@@ -37,9 +37,10 @@ export class ProjectController {
   }
 
   @GetProjectDocs()
+  @ProjectRoles(['owner', 'member', 'viewer'])
   @Get(':projectId')
-  async getProject(@Request() req, @Param('projectId') id: number) {
-    return await this.projectService.getProject(id, req.user.id);
+  async getProject(@Param('projectId') id: number) {
+    return await this.projectService.getProject(id);
   }
 
   @GetAllProjectDocs()
@@ -49,19 +50,20 @@ export class ProjectController {
   }
 
   @RemoveProjectDocs()
+  @ProjectRoles(['owner'])
   @Delete(':projectId')
-  async removeProject(@Param('projectId') id: number, @Request() req) {
-    return await this.projectService.removeProject(id, req.user.id);
+  async removeProject(@Param('projectId') id: number) {
+    return await this.projectService.removeProject(id);
   }
 
   @UpdateProjectDocs()
+  @ProjectRoles(['owner'])
   @Patch(':projectId')
   async updateProject(
-    @Request() req,
     @Param('projectId') id: number,
     @Body() dto: UpdateProjectDto,
   ) {
-    return await this.projectService.updateProject(id, req.user.id, dto);
+    return await this.projectService.updateProject(id, dto);
   }
 
   @AddProjectMemberDocs()
