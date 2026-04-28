@@ -48,18 +48,32 @@ export class CommentService {
     return comment;
   }
 
-  async update(commentId: number, dto: UpdateCommentDto) {
-    const comment = await this.commentRepository.update(commentId, {
-      content: dto.content,
-    });
+  async updateComment(
+    commentId: number,
+    authorId: number,
+    dto: UpdateCommentDto,
+  ) {
+    console.log(commentId, authorId);
+    const comment = await this.commentRepository.update(
+      { id: commentId, author: { id: authorId } },
+      {
+        content: dto.content,
+      },
+    );
+
     if (comment.affected === 0) {
       throw new NotFoundException('Resource not found');
     }
-    return await this.commentRepository.findOne({ where: { id: commentId } });
+    return await this.commentRepository.findOne({
+      where: { id: commentId },
+    });
   }
 
-  async remove(commentId: number) {
-    const comment = await this.commentRepository.delete(commentId);
+  async removeComment(commentId: number, authorId: number) {
+    const comment = await this.commentRepository.delete({
+      id: commentId,
+      author: { id: authorId },
+    });
     if (comment.affected === 0) {
       throw new NotFoundException('Resource not found');
     }

@@ -64,16 +64,21 @@ export class CommentController {
   @ProjectRoles(['owner', 'member', 'viewer'])
   @Patch(':commentId')
   async updateComment(
+    @Request() req,
     @Param('commentId', ParseIntPipe) commentId: string,
     @Body() dto: UpdateCommentDto,
   ) {
-    return await this.commentService.update(+commentId, dto);
+    return await this.commentService.updateComment(
+      +commentId,
+      req.user.id,
+      dto,
+    );
   }
 
   @RemoveCommentDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
   @Delete(':commentId')
-  async removeComment(@Param('commentId') commentId: string) {
-    return await this.commentService.remove(+commentId);
+  async removeComment(@Request() req, @Param('commentId') commentId: string) {
+    return await this.commentService.removeComment(+commentId, req.user.id);
   }
 }

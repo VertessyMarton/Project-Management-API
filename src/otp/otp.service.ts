@@ -99,7 +99,7 @@ export class OtpService {
       .getOne();
 
     if (!user) {
-      throw new BadRequestException(message);
+      return { message };
     }
 
     if (user.status === 'unverified') {
