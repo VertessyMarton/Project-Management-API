@@ -15,12 +15,18 @@ import { SwaggerRegisterDocs } from 'src/common/decorators/swagger/register-docs
 import { LoginResponseDto } from './dto/login-response.dto';
 import { SwaggerLoginDocs } from 'src/common/decorators/swagger/login-docs.decorator';
 import { SwaggerRefreshDocs } from 'src/common/decorators/swagger/refresh-docs.decorator';
+import {
+  AuthLimit,
+  RefreshLimit,
+  RegisterLimit,
+} from 'src/common/decorators/rate-limit.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @SwaggerRegisterDocs()
+  @RegisterLimit()
   @Post('register')
   async createUser(@Body() dto: RegisterDto) {
     const user = await this.authService.createUser(
@@ -33,6 +39,7 @@ export class AuthController {
 
   @SwaggerLoginDocs()
   @HttpCode(200)
+  @AuthLimit()
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Request() req): Promise<LoginResponseDto> {
@@ -42,6 +49,7 @@ export class AuthController {
 
   @SwaggerRefreshDocs()
   @HttpCode(200)
+  @RefreshLimit()
   @UseGuards(RefreshAuthGuard)
   @Post('refresh')
   refreshToken(@Request() req) {

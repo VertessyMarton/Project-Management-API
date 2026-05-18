@@ -23,6 +23,10 @@ import {
   RemoveCommentDocs,
   UpdateCommentDocs,
 } from 'src/common/decorators/swagger/comment-docs.decorator';
+import {
+  MutationLimit,
+  ReadLimit,
+} from 'src/common/decorators/rate-limit.decorator';
 
 @UseGuards(JwtAuthGuard, ProjectRolesGuard)
 @Controller('projects/:projectId/tasks/:taskId/comments')
@@ -31,6 +35,7 @@ export class CommentController {
 
   @CreateCommentDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
+  @MutationLimit()
   @Post()
   async createComment(
     @Request() req,
@@ -48,6 +53,7 @@ export class CommentController {
 
   @FindAllCommentDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
+  @ReadLimit()
   @Get()
   async findAllComment(@Param('taskId', ParseIntPipe) taskId: number) {
     return await this.commentService.findAllComment(taskId);
@@ -55,6 +61,7 @@ export class CommentController {
 
   @FindOneCommentDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
+  @ReadLimit()
   @Get(':commentId')
   async findOneComment(@Param('commentId', ParseIntPipe) commentId: string) {
     return await this.commentService.findOneComment(+commentId);
@@ -62,6 +69,7 @@ export class CommentController {
 
   @UpdateCommentDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
+  @MutationLimit()
   @Patch(':commentId')
   async updateComment(
     @Request() req,
@@ -77,6 +85,7 @@ export class CommentController {
 
   @RemoveCommentDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
+  @MutationLimit()
   @Delete(':commentId')
   async removeComment(@Request() req, @Param('commentId') commentId: string) {
     return await this.commentService.removeComment(+commentId, req.user.id);

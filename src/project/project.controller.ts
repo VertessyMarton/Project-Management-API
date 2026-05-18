@@ -24,6 +24,10 @@ import {
   RemoveProjectDocs,
   UpdateProjectDocs,
 } from 'src/common/decorators/swagger/project-docs.decorator';
+import {
+  MutationLimit,
+  ReadLimit,
+} from 'src/common/decorators/rate-limit.decorator';
 
 @UseGuards(JwtAuthGuard, ProjectRolesGuard)
 @Controller('projects')
@@ -31,12 +35,14 @@ export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @CreateProjectDocs()
+  @MutationLimit()
   @Post()
   async createProject(@Request() req, @Body() dto: CreateProjectDto) {
     return await this.projectService.createProject(req.user.id, dto);
   }
 
   @GetProjectDocs()
+  @ReadLimit()
   @ProjectRoles(['owner', 'member', 'viewer'])
   @Get(':projectId')
   async getProject(@Param('projectId') id: number) {
@@ -44,12 +50,14 @@ export class ProjectController {
   }
 
   @GetAllProjectDocs()
+  @ReadLimit()
   @Get()
   async getAllProject(@Request() req) {
     return await this.projectService.getAllProject(req.user.id);
   }
 
   @RemoveProjectDocs()
+  @MutationLimit()
   @ProjectRoles(['owner'])
   @Delete(':projectId')
   async removeProject(@Param('projectId') id: number) {
@@ -57,6 +65,7 @@ export class ProjectController {
   }
 
   @UpdateProjectDocs()
+  @MutationLimit()
   @ProjectRoles(['owner'])
   @Patch(':projectId')
   async updateProject(
@@ -67,6 +76,7 @@ export class ProjectController {
   }
 
   @AddProjectMemberDocs()
+  @MutationLimit()
   @ProjectRoles(['owner'])
   @Post(':projectId')
   async addProjectMember(

@@ -23,6 +23,10 @@ import {
   RemoveTaskDocs,
   UpdateTaskDocs,
 } from 'src/common/decorators/swagger/task-docs.decorator';
+import {
+  MutationLimit,
+  ReadLimit,
+} from 'src/common/decorators/rate-limit.decorator';
 
 @UseGuards(JwtAuthGuard, ProjectRolesGuard)
 @Controller('projects')
@@ -31,6 +35,7 @@ export class TaskController {
 
   @CreateTaskDocs()
   @ProjectRoles(['owner', 'member'])
+  @MutationLimit()
   @Post(':projectId/tasks')
   async createTask(
     @Request() req,
@@ -42,6 +47,7 @@ export class TaskController {
 
   @FindAllTaskDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
+  @ReadLimit()
   @Get(':projectId/tasks')
   findAllTask(@Param('projectId') id: number) {
     return this.taskService.findAllTask(id);
@@ -49,6 +55,7 @@ export class TaskController {
 
   @FindOneTaskDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
+  @ReadLimit()
   @Get(':projectId/tasks/:taskId')
   findOneTask(
     @Param('projectId') projectId: number,
@@ -59,6 +66,7 @@ export class TaskController {
 
   @UpdateTaskDocs()
   @ProjectRoles(['owner', 'member'])
+  @MutationLimit()
   @Patch(':projectId/tasks/:taskId')
   updateTask(@Param('taskId') id: number, @Body() dto: UpdateTaskDto) {
     return this.taskService.updateTask(id, dto);
@@ -66,6 +74,7 @@ export class TaskController {
 
   @RemoveTaskDocs()
   @ProjectRoles(['owner', 'member'])
+  @MutationLimit()
   @Delete(':projectId/tasks/:taskId')
   removeTask(@Param('taskId') id: number) {
     return this.taskService.removeTask(id);
