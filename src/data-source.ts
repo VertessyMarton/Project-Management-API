@@ -33,6 +33,6 @@ export default new DataSource({
   password: getEnv('DB_PASSWORD'),
   database: getEnv('DB_DATABASE'),
   entities: [User, Otp, Project, ProjectMembers, Task, Comment],
-  migrations: ['src/migrations/*.ts'],
+  migrations: [__dirname + '/migrations/*{.ts,.js}'],
   synchronize: false,
 });
