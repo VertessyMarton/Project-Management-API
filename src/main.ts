@@ -20,12 +20,15 @@ async function bootstrap() {
       'REST API for managing projects, tasks, comments, and admin actions',
     )
     .setVersion('1.0')
+    .addServer('/api')
     .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
 
   SwaggerModule.setup('docs', app, document);
+
+  app.setGlobalPrefix('api');
 
   await app.listen(process.env.PORT ?? 3000);
 }
