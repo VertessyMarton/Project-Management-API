@@ -17,6 +17,8 @@ import { Task } from './task/entities/task.entity';
 import { CommentModule } from './comment/comment.module';
 import { Comment } from './comment/entities/comment.entity';
 import { AdminModule } from './admin/admin.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -37,6 +39,12 @@ import { AdminModule } from './admin/admin.module';
       }),
       inject: [ConfigService],
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60_000,
+        limit: 1000,
+      },
+    ]),
     AuthModule,
     UserModule,
     EmailModule,
@@ -47,6 +55,12 @@ import { AdminModule } from './admin/admin.module';
     AdminModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
