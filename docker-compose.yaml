@@ -6,30 +6,7 @@ services:
       - .env
     ports:
       - '3000:3000'
-    depends_on:
-      db:
-        condition: service_healthy
     command: sh -c "npm run migration:run && npm run start:prod"
     volumes:
       - .:/api
       - /api/node_modules
-
-  db:
-    image: postgres:18-alpine
-    container_name: project-manager-db
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: project_manager
-    ports:
-      - '5432:5432'
-    volumes:
-      - postgres-data:/var/lib/postgresql
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d project_manager']
-      interval: 2s
-      timeout: 3s
-      retries: 30
-
-volumes:
-  postgres-data:

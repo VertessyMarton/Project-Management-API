@@ -34,6 +34,10 @@ import { APP_GUARD } from '@nestjs/core';
         username: configService.getOrThrow<string>('DB_USERNAME'),
         password: configService.getOrThrow<string>('DB_PASSWORD'),
         database: configService.getOrThrow<string>('DB_DATABASE'),
+        ssl:
+          configService.get<string>('DB_SSL') === 'true'
+            ? { rejectUnauthorized: false }
+            : false,
         entities: [User, Otp, Project, ProjectMembers, Task, Comment],
         synchronize: false,
       }),

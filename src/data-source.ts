@@ -32,6 +32,7 @@ export default new DataSource({
   username: getEnv('DB_USERNAME'),
   password: getEnv('DB_PASSWORD'),
   database: getEnv('DB_DATABASE'),
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
   entities: [User, Otp, Project, ProjectMembers, Task, Comment],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   synchronize: false,
