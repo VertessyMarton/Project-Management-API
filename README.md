@@ -4,6 +4,19 @@ A REST API built with **NestJS** for managing projects, tasks, comments, project
 
 This project is designed as a portfolio-ready backend service: it demonstrates authentication, database modelling, migrations, validation, protected routes, project-level permissions, admin-only endpoints, and clean modular NestJS architecture.
 
+Local development uses Docker Compose with PostgreSQL.  
+The deployed version runs on Render and uses Supabase PostgreSQL.
+
+## Live Demo
+
+The deployed API is available at:
+
+`https://project-management-api-137k.onrender.com/api`
+
+Swagger docs:
+
+`https://project-management-api-137k.onrender.com/docs`
+
 ## Features
 
 - JWT Authentication (Access + Refresh tokens)
@@ -25,19 +38,6 @@ This project is designed as a portfolio-ready backend service: it demonstrates a
 - **Email:** Nodemailer
 - **Documentation:** Swagger
 - **Tooling:** Docker
-
-## Prerequisites
-
-### Run with Docker (recommended)
-
-- Docker
-- Docker Compose
-
-### Local Development (optional)
-
-- Node.js (v18+)
-- npm
-- PostgreSQL
 
 ## Installation (Docker)
 
@@ -132,9 +132,3 @@ api
 │   └── main.ts
 ├── test
 ```
-
-## API Documentation
-
-Swagger UI is available at:
-
-`http://localhost:3000/docs`
