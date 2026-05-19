@@ -15,8 +15,11 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+    it('should return health check response', () => {
+      expect(appController.getHealth()).toMatchObject({
+        status: 'ok',
+        service: 'project-management-api',
+      });
     });
   });
 });

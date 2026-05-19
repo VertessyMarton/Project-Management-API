@@ -3,12 +3,16 @@ import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 
 export function AppRootDocs() {
   return applyDecorators(
-    ApiOperation({ summary: 'Get application welcome message' }),
+    ApiOperation({ summary: 'Get application health check' }),
 
     ApiOkResponse({
-      description: 'Application welcome message returned',
+      description: 'Application is running',
       schema: {
-        example: 'Hello World!',
+        example: {
+          status: 'ok',
+          service: 'project-management-api',
+          timestamp: '2026-05-19T12:00:00.000Z',
+        },
       },
     }),
   );
