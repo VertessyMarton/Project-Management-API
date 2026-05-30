@@ -118,8 +118,6 @@ export class ProjectService {
       },
     });
 
-    console.log(hasRole);
-
     if (hasRole) {
       throw new ForbiddenException('Cannot add user to the project');
     }

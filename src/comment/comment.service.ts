@@ -53,7 +53,6 @@ export class CommentService {
     authorId: number,
     dto: UpdateCommentDto,
   ) {
-    console.log(commentId, authorId);
     const comment = await this.commentRepository.update(
       { id: commentId, author: { id: authorId } },
       {
