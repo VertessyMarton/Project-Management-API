@@ -1,10 +1,15 @@
 import { applyDecorators } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 
+const isProd = process.env.NODE_ENV === 'production';
+
 export const RateLimit = (limit: number, ttl = 60_000) =>
   applyDecorators(
     Throttle({
-      default: { limit, ttl },
+      default: {
+        limit: isProd ? limit : 10000,
+        ttl,
+      },
     }),
   );
 
