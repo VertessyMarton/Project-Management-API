@@ -66,3 +66,7 @@ jobs:
 
       - name: Build app
         run: npm run build
+
+      - name: Trigger Render deploy
+        if: success() && github.ref == 'refs/heads/master'
+        run: curl "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
