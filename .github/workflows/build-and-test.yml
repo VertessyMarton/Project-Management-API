@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: project_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: '5432'
+      DB_USERNAME: test
+      DB_PASSWORD: test
+      DB_DATABASE: project_test
+      DB_SSL: 'false'
+      JWT_SECRET: test_secret
+      JWT_EXPIRES_IN: 15m
+      REFRESH_JWT_SECRET: test_refresh_secret
+      REFRESH_JWT_EXPIRES_IN: 7d
+      EMAIL_HOST: localhost
+      EMAIL_PORT: '1025'
+      EMAIL_USER: test@example.com
+      EMAIL_PASS: test_password
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run migrations
+        run: npm run migration:run
+
+      - name: Run e2e tests
+        run: npm run test:e2e
+
+      - name: Build app
+        run: npm run build
