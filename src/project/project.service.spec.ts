@@ -1,18 +1,90 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
+import { ProjectRoleEnum } from './enums/project-role.enum';
 import { ProjectService } from './project.service';
 
 describe('ProjectService', () => {
   let service: ProjectService;
+  let projectRepository: {
+    save: jest.Mock;
+    findOne: jest.Mock;
+    find: jest.Mock;
+    delete: jest.Mock;
+    update: jest.Mock;
+  };
+  let projectMemberRepository: {
+    save: jest.Mock;
+    findOne: jest.Mock;
+  };
+  let userRepository: {
+    findOne: jest.Mock;
+  };
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [ProjectService],
-    }).compile();
+  beforeEach(() => {
+    projectRepository = {
+      save: jest.fn(),
+      findOne: jest.fn(),
+      find: jest.fn(),
+      delete: jest.fn(),
+      update: jest.fn(),
+    };
+    projectMemberRepository = {
+      save: jest.fn(),
+      findOne: jest.fn(),
+    };
+    userRepository = {
+      findOne: jest.fn(),
+    };
 
-    service = module.get<ProjectService>(ProjectService);
+    service = new ProjectService(
+      projectRepository as any,
+      projectMemberRepository as any,
+      userRepository as any,
+    );
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  it('creates a project and makes the creator an owner', async () => {
+    const project = { id: 10, name: 'Roadmap' };
+    projectRepository.save.mockResolvedValue(project);
+
+    await expect(
+      service.createProject(1, { name: 'Roadmap', description: 'Q2' }),
+    ).resolves.toBe(project);
+
+    expect(projectMemberRepository.save).toHaveBeenCalledWith({
+      project: { id: 10 },
+      user: { id: 1 },
+      role: ProjectRoleEnum.OWNER,
+    });
+  });
+
+  it('rejects empty project updates', async () => {
+    await expect(service.updateProject(1, {})).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    expect(projectRepository.update).not.toHaveBeenCalled();
+  });
+
+  it('does not add a duplicate project member', async () => {
+    userRepository.findOne.mockResolvedValue({ id: 2 });
+    projectMemberRepository.findOne.mockResolvedValue({ id: 99 });
+
+    await expect(
+      service.addProjectMember(1, {
+        email: 'member@example.com',
+        role: ProjectRoleEnum.MEMBER,
+      }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('throws when a requested project does not exist', async () => {
+    projectRepository.findOne.mockResolvedValue(null);
+
+    await expect(service.getProject(404)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 });
