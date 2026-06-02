@@ -19,6 +19,7 @@ import { Comment } from './comment/entities/comment.entity';
 import { AdminModule } from './admin/admin.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { refreshToken } from './auth/entities/refresh-token.entity';
 
 @Module({
   imports: [
@@ -38,7 +39,15 @@ import { APP_GUARD } from '@nestjs/core';
           configService.get<string>('DB_SSL') === 'true'
             ? { rejectUnauthorized: false }
             : false,
-        entities: [User, Otp, Project, ProjectMembers, Task, Comment],
+        entities: [
+          User,
+          Otp,
+          Project,
+          ProjectMembers,
+          Task,
+          Comment,
+          refreshToken,
+        ],
         synchronize: false,
       }),
       inject: [ConfigService],
