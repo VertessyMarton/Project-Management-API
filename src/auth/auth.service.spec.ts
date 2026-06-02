@@ -19,6 +19,9 @@ describe('AuthService', () => {
   let emailService: {
     sendEmail: jest.Mock;
   };
+  let refreshService: {
+    createRefreshToken: jest.Mock;
+  };
 
   beforeEach(() => {
     userRepository = {
@@ -34,13 +37,16 @@ describe('AuthService', () => {
     emailService = {
       sendEmail: jest.fn().mockResolvedValue(undefined),
     };
+    refreshService = {
+      createRefreshToken: jest.fn(),
+    };
 
     service = new AuthService(
       userRepository as any,
-      { secret: 'refresh-secret', expiresIn: '7d' } as any,
       jwtService as any,
       otpService as any,
       emailService as any,
+      refreshService as any,
     );
   });
 
@@ -106,5 +112,28 @@ describe('AuthService', () => {
         status: 'unverified',
       }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it('returns an access token and refresh token when login succeeds', async () => {
+    const user = {
+      id: 1,
+      email: 'test@example.com',
+      role: UserRoleEnum.USER,
+      status: 'verified' as const,
+    };
+    jwtService.sign.mockReturnValue('access-token');
+    refreshService.createRefreshToken.mockResolvedValue('refresh-token');
+
+    await expect(service.login(user)).resolves.toEqual({
+      user,
+      accessToken: 'access-token',
+      refreshToken: 'refresh-token',
+    });
+
+    expect(jwtService.sign).toHaveBeenCalledWith({
+      sub: user.id,
+      role: user.role,
+    });
+    expect(refreshService.createRefreshToken).toHaveBeenCalledWith(user.id);
   });
 });

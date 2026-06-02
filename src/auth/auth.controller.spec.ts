@@ -6,17 +6,27 @@ describe('AuthController', () => {
   let authService: {
     createUser: jest.Mock;
     login: jest.Mock;
+  };
+  let refreshService: {
     refreshToken: jest.Mock;
+  };
+  let response: {
+    cookie: jest.Mock;
   };
 
   beforeEach(() => {
     authService = {
       createUser: jest.fn(),
       login: jest.fn(),
+    };
+    refreshService = {
       refreshToken: jest.fn(),
     };
+    response = {
+      cookie: jest.fn(),
+    };
 
-    controller = new AuthController(authService as any);
+    controller = new AuthController(authService as any, refreshService as any);
   });
 
   it('registers a user and returns a safe response dto', async () => {
@@ -59,25 +69,48 @@ describe('AuthController', () => {
       refreshToken: 'refresh-token',
     });
 
-    await expect(controller.login({ user })).resolves.toEqual({
+    await expect(controller.login({ user }, response as any)).resolves.toEqual({
       user,
       accessToken: 'access-token',
-      refreshToken: 'refresh-token',
     });
     expect(authService.login).toHaveBeenCalledWith(user);
+    expect(response.cookie).toHaveBeenCalledWith(
+      'refreshToken',
+      'refresh-token',
+      expect.objectContaining({
+        httpOnly: true,
+        sameSite: 'strict',
+        path: '/api/auth',
+      }),
+    );
   });
 
-  it('refreshes access token for the request user', () => {
-    authService.refreshToken.mockReturnValue({
+  it('refreshes access token from the refresh-token cookie', async () => {
+    refreshService.refreshToken.mockResolvedValue({
       id: 1,
       accessToken: 'new-access-token',
+      refreshToken: 'new-refresh-token',
     });
 
-    expect(
-      controller.refreshToken({
-        user: { id: 1, role: UserRoleEnum.USER },
+    await expect(
+      controller.refreshToken(
+        {
+          cookies: { refreshToken: 'old-refresh-token' },
+        },
+        response as any,
+      ),
+    ).resolves.toEqual({ id: 1, accessToken: 'new-access-token' });
+    expect(refreshService.refreshToken).toHaveBeenCalledWith(
+      'old-refresh-token',
+    );
+    expect(response.cookie).toHaveBeenCalledWith(
+      'refreshToken',
+      'new-refresh-token',
+      expect.objectContaining({
+        httpOnly: true,
+        sameSite: 'strict',
+        path: '/api/auth',
       }),
-    ).toEqual({ id: 1, accessToken: 'new-access-token' });
-    expect(authService.refreshToken).toHaveBeenCalledWith(1, UserRoleEnum.USER);
+    );
   });
 });
