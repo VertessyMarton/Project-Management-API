@@ -7,6 +7,12 @@ import { User } from 'src/user/entities/user.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { createUserDto } from './helpers/user.helper';
 import { EmailService } from 'src/email/email.service';
+import cookieParser from 'cookie-parser';
+import {
+  createAuthenticatedUser,
+  findRefreshCookie,
+  toCookieArray,
+} from './helpers/auth.helper';
 
 let userRepository: Repository<User>;
 
@@ -24,6 +30,8 @@ describe('Auth (e2e)', () => {
       .compile();
 
     app = moduleRef.createNestApplication();
+
+    app.use(cookieParser());
 
     userRepository = moduleRef.get<Repository<User>>(getRepositoryToken(User));
 
@@ -113,17 +121,17 @@ describe('Auth (e2e)', () => {
       .expect(200);
 
     expect(response.body.accessToken).toBeDefined();
-    expect(response.body.refreshToken).toBeDefined();
     expect(response.body.user).toBeDefined();
     expect(response.body.user.email).toBe(user.email);
+
+    const cookies = response.headers['set-cookie'];
+    expect(cookies).toBeDefined();
   });
 
   it('rejects an invalid refresh token', async () => {
-    const wrongRefreshToken = 'wrongToken';
-
     await request(app.getHttpServer())
       .post('/auth/refresh')
-      .set('Authorization', `Bearer ${wrongRefreshToken}`)
+      .set('Cookie', `refreshToken=wrongToken`)
       .expect(401);
   });
 
@@ -145,15 +153,71 @@ describe('Auth (e2e)', () => {
       })
       .expect(200);
 
-    const refreshToken = loginResponse.body.refreshToken;
+    const cookies = toCookieArray(loginResponse.headers['set-cookie']);
 
-    expect(refreshToken).toBeDefined();
+    expect(cookies).toBeDefined();
 
     const refreshResponse = await request(app.getHttpServer())
       .post('/auth/refresh')
-      .set('Authorization', `Bearer ${refreshToken}`)
+      .set('Cookie', cookies)
       .expect(200);
 
     expect(refreshResponse.body.accessToken).toBeDefined();
+
+    const rotatedCookies = refreshResponse.headers['set-cookie'];
+    expect(rotatedCookies).toBeDefined();
+  });
+
+  it('logs in, refreshes, logs out, and rejects refresh after logout', async () => {
+    const user = await createAuthenticatedUser(app, userRepository);
+    const loginRefreshCookie = user.refreshCookie;
+
+    expect(user.accessToken).toBeDefined();
+    expect(loginRefreshCookie).toBeDefined();
+    expect(loginRefreshCookie).toContain('HttpOnly');
+
+    const refreshResponse = await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .set('Cookie', loginRefreshCookie!)
+      .expect(200);
+
+    expect(refreshResponse.body.accessToken).toBeDefined();
+    expect(refreshResponse.body.id).toBeDefined();
+
+    const rotatedRefreshCookie = findRefreshCookie(
+      refreshResponse.headers['set-cookie'],
+    );
+
+    expect(rotatedRefreshCookie).toBeDefined();
+    expect(rotatedRefreshCookie).not.toBe(loginRefreshCookie);
+
+    await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .set('Cookie', loginRefreshCookie!)
+      .expect(401);
+
+    const logoutResponse = await request(app.getHttpServer())
+      .post('/auth/logout')
+      .set('Cookie', rotatedRefreshCookie!)
+      .expect(200);
+
+    expect(logoutResponse.body).toEqual({ message: 'Token revoked' });
+
+    const clearedRefreshCookie = toCookieArray(
+      logoutResponse.headers['set-cookie'],
+    ).find(
+      (cookie) =>
+        cookie.startsWith('refreshToken=') && cookie.includes('Path=/api/auth'),
+    );
+
+    expect(clearedRefreshCookie).toBeDefined();
+    expect(clearedRefreshCookie).toMatch(/Expires=Thu, 01 Jan 1970|Max-Age=0/);
+
+    await request(app.getHttpServer()).post('/auth/refresh').expect(401);
+
+    await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .set('Cookie', rotatedRefreshCookie!)
+      .expect(401);
   });
 });

@@ -7,6 +7,14 @@ import { User } from 'src/user/entities/user.entity';
 import { createUserDto } from './user.helper';
 import { UserRoleEnum } from 'src/user/enums/user-role.enum';
 
+export type CookieHeader = string | string[] | undefined;
+
+export const toCookieArray = (cookies: CookieHeader) =>
+  Array.isArray(cookies) ? cookies : cookies ? [cookies] : [];
+
+export const findRefreshCookie = (cookies: CookieHeader) =>
+  toCookieArray(cookies).find((cookie) => cookie.startsWith('refreshToken='));
+
 export const registerVerifiedUser = async (
   app: INestApplication,
   userRepository: Repository<User>,
@@ -40,7 +48,7 @@ export const createAuthenticatedUser = async (
   return {
     user,
     accessToken: response.body.accessToken,
-    refreshToken: response.body.refreshToken,
+    refreshCookie: findRefreshCookie(response.headers['set-cookie']),
   };
 };
 
@@ -66,6 +74,6 @@ export const createAuthenticatedAdmin = async (
   return {
     user,
     accessToken: response.body.accessToken,
-    refreshToken: response.body.refreshToken,
+    refreshCookie: findRefreshCookie(response.headers['set-cookie']),
   };
 };
