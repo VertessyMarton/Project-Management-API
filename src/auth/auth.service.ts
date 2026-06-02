@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -9,25 +8,23 @@ import { User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
 import bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
-import refreshJwtConfig from './config/refresh-jwt.config';
-import type { ConfigType } from '@nestjs/config';
 import { OtpService } from 'src/otp/otp.service';
 import { OtpEnum } from 'src/otp/enums/otp.enum';
 import { EmailService } from 'src/email/email.service';
 import { verificationEmailTemplate } from 'src/email/templates/verification-email.template';
 import { ValidateUserDto } from './dto/validate-user.dto';
 import { AuthenticatedUser, LoginResult } from './types/login-result.type';
+import { RefreshTokenService } from './refresh-token.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    @Inject(refreshJwtConfig.KEY)
-    private refreshTokenConfig: ConfigType<typeof refreshJwtConfig>,
     private jwtService: JwtService,
     private otpService: OtpService,
     private emailService: EmailService,
+    private refreshService: RefreshTokenService,
   ) {}
 
   async createUser(
@@ -91,20 +88,11 @@ export class AuthService {
 
     const payload = { sub: user.id, role: user.role };
     const accessToken = this.jwtService.sign(payload);
-    const refreshToken = this.jwtService.sign(payload, this.refreshTokenConfig);
+    const refreshToken = await this.refreshService.createRefreshToken(user.id);
     return {
       user,
       accessToken,
       refreshToken,
-    };
-  }
-
-  refreshToken(userId: number, role: string) {
-    const payload = { sub: userId, role: role };
-    const accessToken = this.jwtService.sign(payload);
-    return {
-      id: userId,
-      accessToken: accessToken,
     };
   }
 }

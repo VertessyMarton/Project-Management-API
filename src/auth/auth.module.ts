@@ -9,22 +9,21 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import jwtConfig from './config/jwt.config';
-import refreshJwtConfig from './config/refresh-jwt.config';
-import { RefreshJwtStrategy } from './strategies/refresh.strategy';
 import { EmailModule } from 'src/email/email.module';
 import { OtpModule } from 'src/otp/otp.module';
+import { RefreshTokenService } from './refresh-token.service';
+import { refreshToken } from './entities/refresh-token.entity';
 
 @Module({
   imports: [
     PassportModule,
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, refreshToken]),
     JwtModule.registerAsync(jwtConfig.asProvider()),
     ConfigModule.forFeature(jwtConfig),
-    ConfigModule.forFeature(refreshJwtConfig),
     EmailModule,
     OtpModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy, RefreshJwtStrategy],
+  providers: [AuthService, RefreshTokenService, LocalStrategy, JwtStrategy],
 })
 export class AuthModule {}
