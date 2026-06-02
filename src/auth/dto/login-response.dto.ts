@@ -8,17 +8,11 @@ export class LoginResponseDto {
   })
   accessToken: string;
 
-  @ApiProperty({
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refresh-token-signature',
-  })
-  refreshToken: string;
-
   @ApiProperty({ type: UserResponseDto })
   user: UserResponseDto;
 
-  constructor(login: LoginResult) {
+  constructor(login: any) {
     this.accessToken = login.accessToken;
-    this.refreshToken = login.refreshToken;
     this.user = new UserResponseDto(login.user);
   }
 }
