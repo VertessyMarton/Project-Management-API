@@ -14,6 +14,7 @@ import {
 import { UserRoleEnum } from '../enums/user-role.enum';
 import { Task } from 'src/task/entities/task.entity';
 import { Comment } from 'src/comment/entities/comment.entity';
+import { refreshToken } from 'src/auth/entities/refresh-token.entity';
 
 @Entity()
 export class User {
@@ -44,6 +45,9 @@ export class User {
 
   @OneToMany(() => Comment, (comment) => comment.author)
   author: Comment[];
+
+  @OneToMany(() => refreshToken, (refreshToken) => refreshToken.user)
+  refreshToken: refreshToken[];
 
   @Column({ default: UserRoleEnum.USER, type: 'enum', enum: UserRoleEnum })
   role: UserRoleEnum;
