@@ -134,6 +134,9 @@ describe('AuthService', () => {
       sub: user.id,
       role: user.role,
     });
-    expect(refreshService.createRefreshToken).toHaveBeenCalledWith(user.id);
+    expect(refreshService.createRefreshToken).toHaveBeenCalledWith(
+      user.id,
+      expect.any(String),
+    );
   });
 });
