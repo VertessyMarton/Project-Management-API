@@ -97,9 +97,8 @@ export class AuthController {
   @HttpCode(200)
   @RefreshLimit()
   @Post('logout')
-  async Logout(@Request() req, @Res({ passthrough: true }) res: Response) {
+  async logout(@Request() req, @Res({ passthrough: true }) res: Response) {
     await this.refreshService.revokeRefreshToken(req.cookies.refreshToken);
-    console.log(req.cookies.refreshToken);
 
     res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
 
