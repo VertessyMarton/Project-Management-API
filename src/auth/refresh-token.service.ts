@@ -1,25 +1,21 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { randomBytes, randomUUID } from 'crypto';
-import { refreshToken } from './entities/refresh-token.entity';
+import { RefreshToken } from './entities/refresh-token.entity';
+import { RefreshTokenEnum } from './enums/refresh-token.enum';
 
 @Injectable()
 export class RefreshTokenService {
   constructor(
-    @InjectRepository(refreshToken)
-    private refreshRepository: Repository<refreshToken>,
+    @InjectRepository(RefreshToken)
+    private refreshRepository: Repository<RefreshToken>,
     private jwtService: JwtService,
   ) {}
 
-  async createRefreshToken(userId: number | undefined) {
+  async createRefreshToken(userId: number, familyId: string) {
     const tokenId = randomUUID();
     const secret = randomBytes(64).toString('hex');
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
@@ -31,12 +27,13 @@ export class RefreshTokenService {
       user: { id: userId },
       hashedRefreshToken: await bcrypt.hash(secret, 12),
       expiresAt: expiresAt,
+      familyId: familyId,
     });
 
     return refreshToken;
   }
 
-  async revokeRefreshToken(refreshToken: string) {
+  async isTokenDefined(refreshToken: string) {
     const [tokenId, secret] = refreshToken.split('.');
 
     if (!tokenId || !secret) {
@@ -53,47 +50,72 @@ export class RefreshTokenService {
       throw new UnauthorizedException('Invalid token');
     }
 
-    const valid = await bcrypt.compare(secret, record.hashedRefreshToken);
-
-    if (!valid) {
-      throw new UnauthorizedException('Invalid token');
-    }
-
-    await this.refreshRepository.update(tokenId, { revoked: true });
+    return record;
   }
 
-  async rotateRefreshToken(refreshToken: string, userId: number | undefined) {
-    const [tokenId, secret] = refreshToken.split('.');
+  async isTokenValid(refreshToken: string, definedToken: RefreshToken) {
+    const [, secret] = refreshToken.split('.');
 
-    if (!tokenId || !secret) {
+    if (definedToken.expiresAt < new Date()) {
       throw new UnauthorizedException('Invalid token');
     }
 
-    const record = await this.refreshRepository.findOne({
-      where: { id: tokenId },
-    });
-
-    if (!record) {
-      throw new UnauthorizedException('Invalid token');
-    }
-
-    if (record.revoked) {
-      throw new UnauthorizedException('Invalid token');
-    }
-
-    if (record.expiresAt < new Date()) {
-      throw new UnauthorizedException('Invalid token');
-    }
-
-    const valid = await bcrypt.compare(secret, record.hashedRefreshToken);
+    const valid = await bcrypt.compare(secret, definedToken.hashedRefreshToken);
 
     if (!valid) {
       throw new UnauthorizedException('Invalid token');
     }
+  }
 
-    await this.refreshRepository.update(tokenId, { revoked: true });
+  async revokeRefreshToken(oldRefreshToken: string) {
+    const [tokenId, secret] = oldRefreshToken.split('.');
 
-    const newRefreshToken = await this.createRefreshToken(userId);
+    const definedToken = await this.isTokenDefined(oldRefreshToken);
+
+    if (definedToken.revoked) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    await this.isTokenValid(oldRefreshToken, definedToken);
+
+    await this.refreshRepository.update(tokenId, {
+      revoked: true,
+      revokedAt: new Date(),
+      revokedReason: RefreshTokenEnum.LOGOUT,
+    });
+  }
+
+  async rotateRefreshToken(oldRefreshToken: string, userId: number) {
+    const [tokenId, ,] = oldRefreshToken.split('.');
+
+    const definedToken = await this.isTokenDefined(oldRefreshToken);
+
+    if (definedToken.revoked) {
+      if (definedToken.revokedReason === RefreshTokenEnum.ROTATED) {
+        await this.refreshRepository.update(
+          { familyId: definedToken.familyId },
+          {
+            revoked: true,
+            revokedAt: new Date(),
+            revokedReason: RefreshTokenEnum.REUSE_DETECTED,
+          },
+        );
+      }
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    await this.isTokenValid(oldRefreshToken, definedToken);
+
+    await this.refreshRepository.update(tokenId, {
+      revoked: true,
+      revokedAt: new Date(),
+      revokedReason: RefreshTokenEnum.ROTATED,
+    });
+
+    const newRefreshToken = await this.createRefreshToken(
+      userId,
+      definedToken.familyId,
+    );
 
     return {
       refreshToken: newRefreshToken,
@@ -104,7 +126,7 @@ export class RefreshTokenService {
     if (!oldRefreshToken) {
       throw new UnauthorizedException('Invalid token');
     }
-    const [tokenId, secret] = oldRefreshToken.split('.');
+    const [tokenId, ,] = oldRefreshToken.split('.');
 
     const record = await this.refreshRepository.findOne({
       where: { id: tokenId },
@@ -113,9 +135,13 @@ export class RefreshTokenService {
       },
     });
 
+    if (!record) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
     const rotate = await this.rotateRefreshToken(
       oldRefreshToken,
-      record?.user.id,
+      record.user.id,
     );
 
     const payload = { sub: record?.user.id, role: record?.user.role };

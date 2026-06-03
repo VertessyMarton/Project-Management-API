@@ -89,7 +89,11 @@ export class AuthService {
 
     const payload = { sub: user.id, role: user.role };
     const accessToken = this.jwtService.sign(payload);
-    const refreshToken = await this.refreshService.createRefreshToken(user.id);
+    const familyId = randomUUID();
+    const refreshToken = await this.refreshService.createRefreshToken(
+      user.id,
+      familyId,
+    );
     return {
       user,
       accessToken,
