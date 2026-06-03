@@ -1,9 +1,8 @@
 import { User } from 'src/user/entities/user.entity';
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
-import { UUID } from 'typeorm/driver/mongodb/bson.typings.js';
 
 @Entity()
-export class refreshToken {
+export class RefreshToken {
   @PrimaryColumn()
   id: string;
 

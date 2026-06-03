@@ -15,6 +15,7 @@ import { verificationEmailTemplate } from 'src/email/templates/verification-emai
 import { ValidateUserDto } from './dto/validate-user.dto';
 import { AuthenticatedUser, LoginResult } from './types/login-result.type';
 import { RefreshTokenService } from './refresh-token.service';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class AuthService {

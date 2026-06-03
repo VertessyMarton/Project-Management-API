@@ -12,12 +12,12 @@ import jwtConfig from './config/jwt.config';
 import { EmailModule } from 'src/email/email.module';
 import { OtpModule } from 'src/otp/otp.module';
 import { RefreshTokenService } from './refresh-token.service';
-import { refreshToken } from './entities/refresh-token.entity';
+import { RefreshToken } from './entities/refresh-token.entity';
 
 @Module({
   imports: [
     PassportModule,
-    TypeOrmModule.forFeature([User, refreshToken]),
+    TypeOrmModule.forFeature([User, RefreshToken]),
     JwtModule.registerAsync(jwtConfig.asProvider()),
     ConfigModule.forFeature(jwtConfig),
     EmailModule,

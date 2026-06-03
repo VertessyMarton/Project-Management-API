@@ -19,7 +19,7 @@ import { Comment } from './comment/entities/comment.entity';
 import { AdminModule } from './admin/admin.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { refreshToken } from './auth/entities/refresh-token.entity';
+import { RefreshToken } from './auth/entities/refresh-token.entity';
 
 @Module({
   imports: [
@@ -46,7 +46,7 @@ import { refreshToken } from './auth/entities/refresh-token.entity';
           ProjectMembers,
           Task,
           Comment,
-          refreshToken,
+          RefreshToken,
         ],
         synchronize: false,
       }),
