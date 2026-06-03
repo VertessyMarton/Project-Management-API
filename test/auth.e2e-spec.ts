@@ -191,11 +191,6 @@ describe('Auth (e2e)', () => {
     expect(rotatedRefreshCookie).toBeDefined();
     expect(rotatedRefreshCookie).not.toBe(loginRefreshCookie);
 
-    await request(app.getHttpServer())
-      .post('/auth/refresh')
-      .set('Cookie', loginRefreshCookie!)
-      .expect(401);
-
     const logoutResponse = await request(app.getHttpServer())
       .post('/auth/logout')
       .set('Cookie', rotatedRefreshCookie!)
@@ -217,6 +212,45 @@ describe('Auth (e2e)', () => {
 
     await request(app.getHttpServer())
       .post('/auth/refresh')
+      .set('Cookie', rotatedRefreshCookie!)
+      .expect(401);
+  });
+
+  it('logs in, refreshes, refreshes again with rotated token, revoke tokenfamily', async () => {
+    const user = await createAuthenticatedUser(app, userRepository);
+    const loginRefreshCookie = user.refreshCookie;
+
+    expect(user.accessToken).toBeDefined();
+    expect(loginRefreshCookie).toBeDefined();
+    expect(loginRefreshCookie).toContain('HttpOnly');
+
+    const refreshResponse = await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .set('Cookie', loginRefreshCookie!)
+      .expect(200);
+
+    expect(refreshResponse.body.accessToken).toBeDefined();
+    expect(refreshResponse.body.id).toBeDefined();
+
+    const rotatedRefreshCookie = findRefreshCookie(
+      refreshResponse.headers['set-cookie'],
+    );
+
+    expect(rotatedRefreshCookie).toBeDefined();
+    expect(rotatedRefreshCookie).not.toBe(loginRefreshCookie);
+
+    await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .set('Cookie', loginRefreshCookie!)
+      .expect(401);
+
+    await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .set('Cookie', rotatedRefreshCookie!)
+      .expect(401);
+
+    await request(app.getHttpServer())
+      .post('/auth/logout')
       .set('Cookie', rotatedRefreshCookie!)
       .expect(401);
   });
