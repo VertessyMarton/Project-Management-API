@@ -1,9 +1,15 @@
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { EmailService } from './email.service';
 
-jest.mock('nodemailer', () => ({
-  createTransport: jest.fn(),
+const sendMock = jest.fn();
+
+jest.mock('resend', () => ({
+  Resend: jest.fn().mockImplementation(() => ({
+    emails: {
+      send: sendMock,
+    },
+  })),
 }));
 
 describe('EmailService', () => {
@@ -13,14 +19,15 @@ describe('EmailService', () => {
   };
 
   beforeEach(() => {
+    jest.clearAllMocks();
+
     configService = {
       getOrThrow: jest.fn((key: string) => {
         const config = {
-          EMAIL_HOST: 'smtp.example.com',
-          EMAIL_PORT: '587',
-          EMAIL_USER: 'sender@example.com',
-          EMAIL_PASS: 'password',
+          RESEND_API_KEY: 're_test_api_key',
+          EMAIL_FROM: 'Project Manager <auth@example.com>',
         };
+
         return config[key];
       }),
     };
@@ -28,37 +35,41 @@ describe('EmailService', () => {
     service = new EmailService(configService as unknown as ConfigService);
   });
 
-  it('creates a nodemailer transport from email config', () => {
-    service.emailTransport();
-
-    expect(nodemailer.createTransport).toHaveBeenCalledWith({
-      host: 'smtp.example.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: 'sender@example.com',
-        pass: 'password',
-      },
-    });
+  it('creates a Resend client with the configured API key', () => {
+    expect(Resend).toHaveBeenCalledWith('re_test_api_key');
   });
 
   it('sends email with the configured sender', async () => {
-    const sendMail = jest.fn().mockResolvedValue(undefined);
-    jest
-      .mocked(nodemailer.createTransport)
-      .mockReturnValue({ sendMail } as any);
+    sendMock.mockResolvedValue({ data: { id: 'email-id' }, error: null });
 
     await service.sendEmail({
       recipients: 'recipient@example.com',
       subject: 'Verify your email',
       html: '<p>Hello</p>',
+      text: 'Hello',
     });
 
-    expect(sendMail).toHaveBeenCalledWith({
-      from: 'sender@example.com',
-      to: 'recipient@example.com',
+    expect(sendMock).toHaveBeenCalledWith({
+      from: 'Project Manager <auth@example.com>',
+      to: ['recipient@example.com'],
       subject: 'Verify your email',
       html: '<p>Hello</p>',
+      text: 'Hello',
     });
+  });
+
+  it('throws when Resend returns an error', async () => {
+    sendMock.mockResolvedValue({
+      data: null,
+      error: { message: 'Invalid API key' },
+    });
+
+    await expect(
+      service.sendEmail({
+        recipients: 'recipient@example.com',
+        subject: 'Verify your email',
+        html: '<p>Hello</p>',
+      }),
+    ).rejects.toThrow('Failed to send email: Invalid API key');
   });
 });
