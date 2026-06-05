@@ -62,33 +62,6 @@ docker compose up --build
 
 API runs on `http://localhost:3000`.
 
-## Email Setup (Optional)
-
-This project uses **Gmail SMTP** for verification emails  
-Only verified users allowed to log in
-
-### 1. Enable 2-Step Verification
-
-Go to your Google Account:
-https://myaccount.google.com/security
-
-Enable **2-Step Verification**.
-
-### 2. Generate App Password
-
-Go to:
-https://myaccount.google.com/apppasswords
-
-- Set a custom name
-- Generate password
-
-### 3. Add to `.env`
-
-```env
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_app_password
-```
-
 ## Database
 
 - Uses TypeORM migrations
