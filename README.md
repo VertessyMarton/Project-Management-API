@@ -62,6 +62,17 @@ docker compose up --build
 
 API runs on `http://localhost:3000`.
 
+## Email Service
+
+Uses Resend for email delivery, logs on console for local development
+
+Required only when EMAIL_PROVIDER=resend
+
+```bash
+RESEND_API_KEY=your_resend_api_key
+EMAIL_FROM="Project Manager <auth@your-verified-domain.com>"
+```
+
 ## Database
 
 - Uses TypeORM migrations
