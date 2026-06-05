@@ -13,4 +13,8 @@ export class SendEmailDto {
   @IsOptional()
   @IsString()
   text?: string;
+
+  @IsOptional()
+  @IsString()
+  devMessage?: string;
 }

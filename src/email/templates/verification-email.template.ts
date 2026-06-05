@@ -16,6 +16,7 @@ export function verificationEmailTemplate({
   return {
     recipients: email,
     subject: 'Verify your email',
+    devMessage: `Verification code for ${email}: ${otp}`,
     text: `${greeting}
 
 Welcome to Project Manager.
