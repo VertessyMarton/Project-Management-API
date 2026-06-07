@@ -3,35 +3,33 @@ import { ApiCookieAuth, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 
 import { UnauthorizedResponse } from './swagger-docs.helpers';
 
-export function SwaggerRefreshDocs() {
+export function SwaggerLogoutDocs() {
   return applyDecorators(
     ApiOperation({
-      summary: 'Rotate refresh token and issue a new access token',
+      summary: 'Revoke the current refresh token and clear the refresh cookie',
     }),
     ApiCookieAuth('refreshToken'),
     ApiOkResponse({
       description:
-        'Refresh token valid. New access token is returned in the response body and rotated refresh token is set as an HTTP-only cookie.',
+        'Refresh token revoked successfully and refresh token cookie cleared.',
       headers: {
         'Set-Cookie': {
-          description: 'Rotated HTTP-only refresh token cookie',
+          description: 'Clears the refresh token cookie',
           schema: {
             type: 'string',
             example:
-              'refreshToken=new-token-id.new-secret; Path=/api/auth; HttpOnly; SameSite=Strict',
+              'refreshToken=; Path=/api/auth; Expires=Thu, 01 Jan 1970 00:00:00 GMT',
           },
         },
       },
       schema: {
         example: {
-          id: 1,
-          accessToken:
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.access-token-signature',
+          message: 'Token revoked',
         },
       },
     }),
     UnauthorizedResponse(
-      'Thrown when the refresh token cookie is missing, expired, malformed, revoked, reused, or cannot be validated',
+      'Thrown when the refresh token cookie is missing, expired, malformed, revoked, or cannot be validated',
       {
         message: 'Invalid token',
         error: 'Unauthorized',

@@ -16,6 +16,7 @@ import { SwaggerRegisterDocs } from 'src/common/decorators/swagger/register-docs
 import { LoginResponseDto } from './dto/login-response.dto';
 import { SwaggerLoginDocs } from 'src/common/decorators/swagger/login-docs.decorator';
 import { SwaggerRefreshDocs } from 'src/common/decorators/swagger/refresh-docs.decorator';
+import { SwaggerLogoutDocs } from 'src/common/decorators/swagger/logout-docs.decorator';
 import {
   AuthLimit,
   RefreshLimit,
@@ -94,6 +95,7 @@ export class AuthController {
     };
   }
 
+  @SwaggerLogoutDocs()
   @HttpCode(200)
   @RefreshLimit()
   @Post('logout')

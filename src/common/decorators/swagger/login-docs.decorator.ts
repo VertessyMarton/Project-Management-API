@@ -7,10 +7,23 @@ import { BadRequestResponse } from './swagger-docs.helpers';
 
 export function SwaggerLoginDocs() {
   return applyDecorators(
-    ApiOperation({ summary: 'Validate user, only allows verified users' }),
+    ApiOperation({
+      summary: 'Validate user and issue access token plus refresh cookie',
+    }),
     ApiOkResponse({
       type: LoginResponseDto,
-      description: 'User authenticated, jwt tokens sent',
+      description:
+        'User authenticated. Access token is returned in the response body and refresh token is set as an HTTP-only cookie.',
+      headers: {
+        'Set-Cookie': {
+          description: 'HTTP-only refresh token cookie',
+          schema: {
+            type: 'string',
+            example:
+              'refreshToken=token-id.secret; Path=/api/auth; HttpOnly; SameSite=Strict',
+          },
+        },
+      },
     }),
     ApiBody({ type: ValidateUserDto }),
     BadRequestResponse(

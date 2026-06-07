@@ -27,6 +27,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .addServer('/api')
     .addBearerAuth()
+    .addCookieAuth('refreshToken')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

@@ -34,6 +34,13 @@ export function BadRequestResponse(description: string, example: unknown) {
   });
 }
 
+export function UnauthorizedResponse(description: string, example: unknown) {
+  return ApiUnauthorizedResponse({
+    description,
+    schema: { example },
+  });
+}
+
 export function NotFoundResponse(description: string, example: unknown) {
   return ApiNotFoundResponse({
     description,
