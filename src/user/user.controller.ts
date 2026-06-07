@@ -8,6 +8,7 @@ import {
   ClassSerializerInterceptor,
   Patch,
   Body,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
@@ -38,7 +39,7 @@ export class UserController {
   @GetUserDocs()
   @ReadLimit()
   @Get(':id')
-  async getUser(@Param('id') id: number) {
+  async getUser(@Param('id', ParseIntPipe) id: number) {
     return this.userService.getUser(id);
   }
 
