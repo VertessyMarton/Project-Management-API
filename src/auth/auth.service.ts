@@ -40,7 +40,7 @@ export class AuthService {
       throw new BadRequestException('Email already has been used');
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     const user = await this.userRepository.save({
       name: name,
