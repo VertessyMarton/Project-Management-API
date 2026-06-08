@@ -14,6 +14,9 @@ export class Otp {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ nullable: true })
+  selector: string;
+
   @ManyToOne(() => User, (user) => user.otp, {
     nullable: false,
     onDelete: 'CASCADE',
