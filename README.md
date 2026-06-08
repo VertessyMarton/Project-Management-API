@@ -19,9 +19,11 @@ Swagger docs:
 
 ## Features
 
-- JWT Authentication (Access + Refresh tokens)
+- JWT Authentication
+- Refresh token rotation, revocation, resue detection
 - Email verification with expiring otp
 - Verify email, and resend verification endpoints
+- Forgot password feature, with reset link sent in email
 - Role-based access control (Admin / User)
 - Project-level authorization with owner, member, and viewer roles
 - Dockerized environment (API + PostgreSQL)
