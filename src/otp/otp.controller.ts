@@ -8,6 +8,8 @@ import {
   OtpLimit,
   ResendOtpLimit,
 } from 'src/common/decorators/rate-limit.decorator';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class OtpController {
@@ -27,5 +29,19 @@ export class OtpController {
   @Post('/resend-verification')
   resendEmailVerification(@Body() dto: ResendVerificationDto) {
     return this.otpService.resendEmailVerification(dto);
+  }
+
+  @HttpCode(200)
+  @OtpLimit()
+  @Post('/forgot-password')
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.otpService.forgotPassword(dto);
+  }
+
+  @HttpCode(200)
+  @OtpLimit()
+  @Post('/reset-password')
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.otpService.resetPassword(dto);
   }
 }
