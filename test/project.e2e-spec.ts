@@ -121,4 +121,54 @@ describe('Project (e2e)', () => {
       .set('Authorization', `Bearer ${project.owner.accessToken}`)
       .expect(200);
   });
+
+  it('owner can remove members', async () => {
+    const record = await addMemberToProject(
+      app,
+      userRepository,
+      ProjectRoleEnum.MEMBER,
+    );
+
+    await request(app.getHttpServer())
+      .delete(`/projects/${record.project.id}/members`)
+      .set('Authorization', `Bearer ${record.owner.accessToken}`)
+      .send({
+        email: record.member.user.email,
+      })
+      .expect(200);
+  });
+
+  it('member cannot remove other members', async () => {
+    const record = await addMemberToProject(
+      app,
+      userRepository,
+      ProjectRoleEnum.MEMBER,
+    );
+
+    await request(app.getHttpServer())
+      .delete(`/projects/${record.project.id}/members`)
+      .set('Authorization', `Bearer ${record.member.accessToken}`)
+      .send({
+        email: record.owner.user.email,
+      })
+      .expect(403);
+  });
+
+  it('non-member cannot remove other members', async () => {
+    const nonMember = await createAuthenticatedUser(app, userRepository);
+    const nonMemberToken = nonMember.accessToken;
+    const record = await addMemberToProject(
+      app,
+      userRepository,
+      ProjectRoleEnum.MEMBER,
+    );
+
+    await request(app.getHttpServer())
+      .delete(`/projects/${record.project.id}/members`)
+      .set('Authorization', `Bearer ${nonMemberToken}`)
+      .send({
+        email: record.member.user.email,
+      })
+      .expect(404);
+  });
 });
