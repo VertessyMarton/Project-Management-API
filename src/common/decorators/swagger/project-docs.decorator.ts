@@ -14,6 +14,7 @@ import {
   OkResponse,
 } from './swagger-docs.helpers';
 import { projectExample, projectMemberExample } from './swagger-examples';
+import { RemoveMemberDto } from 'src/project/dto/remove-member.dto';
 
 const projectIdParam = IdParam('projectId', 'Project id');
 const projectNotFound = NotFoundResponse(
@@ -108,6 +109,32 @@ export function AddProjectMemberDocs() {
       'Thrown when the invited user is already a project member, or the authenticated user is not allowed to add members',
       {
         message: 'Cannot add user to the project',
+        error: 'Forbidden',
+        statusCode: 403,
+      },
+    ),
+  );
+}
+
+export function RemoveProjectMemberDocs() {
+  return applyDecorators(
+    ApiOperation({ summary: 'Remove member from project' }),
+    BearerAuthDocs(),
+    projectIdParam,
+    ApiBody({ type: RemoveMemberDto }),
+    OkResponse('Project member removed', projectMemberExample),
+    BadRequestResponse(
+      'Thrown when the request body fails validation or the invited email does not belong to an existing user',
+      {
+        message: 'User cannot be removed from the project',
+        error: 'Bad Request',
+        statusCode: 400,
+      },
+    ),
+    ForbiddenResponse(
+      'Thrown when the user is not a member of the project, or the authenticated user is not allowed to add members',
+      {
+        message: 'Cannot remove user from the project',
         error: 'Forbidden',
         statusCode: 403,
       },

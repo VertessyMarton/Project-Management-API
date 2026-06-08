@@ -22,6 +22,7 @@ import {
   GetAllProjectDocs,
   GetProjectDocs,
   RemoveProjectDocs,
+  RemoveProjectMemberDocs,
   UpdateProjectDocs,
 } from 'src/common/decorators/swagger/project-docs.decorator';
 import {
@@ -87,6 +88,7 @@ export class ProjectController {
     return await this.projectService.addProjectMember(id, dto);
   }
 
+  @RemoveProjectMemberDocs()
   @MutationLimit()
   @ProjectRoles(['owner'])
   @Delete(':projectId/members')
