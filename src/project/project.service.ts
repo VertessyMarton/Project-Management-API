@@ -13,6 +13,7 @@ import { ProjectMembers } from './entities/project-members.entity';
 import { ProjectRoleEnum } from './enums/project-role.enum';
 import { User } from 'src/user/entities/user.entity';
 import { AddMemberDto } from './dto/add-member.dto';
+import { RemoveMemberDto } from './dto/remove-member.dto';
 
 @Injectable()
 export class ProjectService {
@@ -126,6 +127,32 @@ export class ProjectService {
       project: { id: projectId },
       user: { id: user.id },
       role: dto.role,
+    });
+  }
+
+  async removeProjectMember(projectId: number, dto: RemoveMemberDto) {
+    const user = await this.userRepository.findOne({
+      where: { email: dto.email },
+    });
+
+    if (!user) {
+      throw new BadRequestException('User cannot be removed from the project');
+    }
+
+    const hasRole = await this.projectMemberRepository.findOne({
+      where: {
+        project: { id: projectId },
+        user: { id: user.id },
+      },
+    });
+
+    if (!hasRole) {
+      throw new ForbiddenException('Cannot remove user from the project');
+    }
+
+    return await this.projectMemberRepository.delete({
+      project: { id: projectId },
+      user: { id: user.id },
     });
   }
 }
