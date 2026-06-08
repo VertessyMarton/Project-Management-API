@@ -10,6 +10,8 @@ import {
 } from 'src/common/decorators/rate-limit.decorator';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ForgotPasswordDocs } from 'src/common/decorators/swagger/forgot-password-docs.decorator';
+import { ResetPasswordDocs } from 'src/common/decorators/swagger/reset-password-docs.decorator';
 
 @Controller('auth')
 export class OtpController {
@@ -32,6 +34,7 @@ export class OtpController {
   }
 
   @HttpCode(200)
+  @ForgotPasswordDocs()
   @OtpLimit()
   @Post('/forgot-password')
   forgotPassword(@Body() dto: ForgotPasswordDto) {
@@ -39,6 +42,7 @@ export class OtpController {
   }
 
   @HttpCode(200)
+  @ResetPasswordDocs()
   @OtpLimit()
   @Post('/reset-password')
   resetPassword(@Body() dto: ResetPasswordDto) {

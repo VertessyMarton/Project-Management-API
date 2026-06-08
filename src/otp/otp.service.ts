@@ -224,5 +224,7 @@ export class OtpService {
         revokedReason: RefreshTokenEnum.RESET_PASSWORD,
       },
     );
+
+    return { message: 'Password successfully changed' };
   }
 }
