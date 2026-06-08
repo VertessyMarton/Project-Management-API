@@ -28,6 +28,7 @@ import {
   MutationLimit,
   ReadLimit,
 } from 'src/common/decorators/rate-limit.decorator';
+import { RemoveMemberDto } from './dto/remove-member.dto';
 
 @UseGuards(JwtAuthGuard, ProjectRolesGuard)
 @Controller('projects')
@@ -84,5 +85,15 @@ export class ProjectController {
     @Body() dto: AddMemberDto,
   ) {
     return await this.projectService.addProjectMember(id, dto);
+  }
+
+  @MutationLimit()
+  @ProjectRoles(['owner'])
+  @Delete(':projectId/members')
+  async removeProjectMember(
+    @Param('projectId') id: number,
+    @Body() dto: RemoveMemberDto,
+  ) {
+    return await this.projectService.removeProjectMember(id, dto);
   }
 }
