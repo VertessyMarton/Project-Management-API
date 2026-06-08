@@ -1,4 +1,4 @@
 export enum OtpEnum {
   OTP = 'otp',
-  RESET_LINK = 'reset_password',
+  RESET_PASSWORD = 'reset_password',
 }
