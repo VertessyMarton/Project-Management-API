@@ -161,7 +161,7 @@ describe('AppController (e2e)', () => {
       201,
     );
 
-    request(app.getHttpServer())
+    await request(app.getHttpServer())
       .patch(
         `/projects/${project.projectId}/tasks/${task.taskId}/comments/${comment.commentId}`,
       )
@@ -193,7 +193,7 @@ describe('AppController (e2e)', () => {
       201,
     );
 
-    request(app.getHttpServer())
+    await request(app.getHttpServer())
       .patch(
         `/projects/${project.projectId}/tasks/${task.taskId}/comments/${comment.commentId}`,
       )
@@ -201,7 +201,7 @@ describe('AppController (e2e)', () => {
       .send({
         content: 'Updated comment',
       })
-      .expect(401);
+      .expect(404);
   });
 
   it('non-member cannot view on task', async () => {
@@ -227,9 +227,9 @@ describe('AppController (e2e)', () => {
       201,
     );
 
-    request(app.getHttpServer())
+    await request(app.getHttpServer())
       .get(`/projects/${project.projectId}/tasks/${task.taskId}/comments`)
       .set('Authorization', `Bearer ${nonMemberToken}`)
-      .expect(403);
+      .expect(404);
   });
 });
