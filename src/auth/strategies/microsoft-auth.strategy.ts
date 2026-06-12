@@ -32,6 +32,7 @@ export class MicrosoftStrategy extends PassportStrategy(Strategy, 'microsoft') {
       _json?: {
         mail?: string;
         userPrincipalName?: string;
+        displayName?: string;
       };
     };
 
@@ -49,7 +50,10 @@ export class MicrosoftStrategy extends PassportStrategy(Strategy, 'microsoft') {
       provider: OAuthProvider.MICROSOFT,
       providerUserId: profile.id,
       email,
-      name: profile.displayName || profile.username || email,
+      name:
+        profile.displayName?.trim() ||
+        microsoftProfile._json?.displayName?.trim() ||
+        email.split('@')[0],
     });
   }
 }

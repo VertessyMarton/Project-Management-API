@@ -36,7 +36,7 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
       provider: OAuthProvider.GITHUB,
       providerUserId: profile.id,
       email,
-      name: profile.displayName || profile.username || email,
+      name: profile.displayName || profile.username || email.split('@')[0],
     });
   }
 }
