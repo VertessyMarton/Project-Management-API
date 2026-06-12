@@ -29,6 +29,7 @@ import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { ConfigService } from '@nestjs/config';
 import { OAuthFailureRedirectFilter } from './filters/oauth-failure.filter';
 import { GitHubAuthGuard } from './guards/github-auth.guard';
+import { MicrosoftAuthGuard } from './guards/microsoft-auth.guard';
 import { getOAuthRedirectUrl } from './helpers/oauth-redirect-url.helper';
 
 @Controller('auth')
@@ -162,5 +163,40 @@ export class AuthController {
     });
 
     return res.redirect(getOAuthRedirectUrl(this.configService));
+  }
+
+  @Get('microsoft')
+  @UseGuards(MicrosoftAuthGuard)
+  microsoftLogin() {}
+
+  @Get('microsoft/callback')
+  @UseGuards(MicrosoftAuthGuard)
+  @UseFilters(OAuthFailureRedirectFilter)
+  async microsoftCallback(@Request() req, @Res() res: Response) {
+    const { refreshToken } = await this.authService.login(req.user);
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/api/auth',
+    });
+
+    return res.redirect(getOAuthRedirectUrl(this.configService));
+  }
+
+  @Get('oauth/success')
+  oauthSuccess() {
+    return {
+      message: 'OAuth login successful',
+    };
+  }
+
+  @Get('oauth/failure')
+  oauthFailure() {
+    return {
+      message: 'OAuth login failed',
+    };
   }
 }
