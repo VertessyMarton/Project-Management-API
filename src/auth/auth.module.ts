@@ -36,6 +36,7 @@ import { MicrosoftStrategy } from './strategies/microsoft-auth.strategy';
     LocalStrategy,
     JwtStrategy,
     GoogleStrategy,
+    GithubStrategy,
   ],
 })
 export class AuthModule {}
