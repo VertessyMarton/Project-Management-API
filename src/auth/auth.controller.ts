@@ -6,6 +6,8 @@ import {
   Request,
   HttpCode,
   Res,
+  Get,
+  UseFilters,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
@@ -23,12 +25,17 @@ import {
   RegisterLimit,
 } from 'src/common/decorators/rate-limit.decorator';
 import { RefreshTokenService } from './refresh-token.service';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { ConfigService } from '@nestjs/config';
+import { OAuthFailureRedirectFilter } from './filters/oauth-failure.filter';
+import { getOAuthRedirectUrl } from './helpers/oauth-redirect-url.helper';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly refreshService: RefreshTokenService,
+    private readonly configService: ConfigService,
   ) {}
 
   @SwaggerRegisterDocs()
@@ -112,5 +119,26 @@ export class AuthController {
     });
 
     return { message: 'Token revoked' };
+  }
+
+  @Get('google')
+  @UseGuards(GoogleAuthGuard)
+  googleLogin() {}
+
+  @Get('google/callback')
+  @UseGuards(GoogleAuthGuard)
+  @UseFilters(OAuthFailureRedirectFilter)
+  async googleCallback(@Request() req, @Res() res: Response) {
+    const { refreshToken } = await this.authService.login(req.user);
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/api/auth',
+    });
+
+    return res.redirect(getOAuthRedirectUrl(this.configService));
   }
 }
