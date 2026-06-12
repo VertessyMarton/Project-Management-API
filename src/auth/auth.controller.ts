@@ -31,6 +31,12 @@ import { OAuthFailureRedirectFilter } from './filters/oauth-failure.filter';
 import { GitHubAuthGuard } from './guards/github-auth.guard';
 import { MicrosoftAuthGuard } from './guards/microsoft-auth.guard';
 import { getOAuthRedirectUrl } from './helpers/oauth-redirect-url.helper';
+import {
+  SwaggerOAuthCallbackDocs,
+  SwaggerOAuthFailureDocs,
+  SwaggerOAuthLoginDocs,
+  SwaggerOAuthSuccessDocs,
+} from 'src/common/decorators/swagger/oauth-docs.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -123,10 +129,12 @@ export class AuthController {
     return { message: 'Token revoked' };
   }
 
+  @SwaggerOAuthLoginDocs('Google')
   @Get('google')
   @UseGuards(GoogleAuthGuard)
   googleLogin() {}
 
+  @SwaggerOAuthCallbackDocs('Google')
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
   @UseFilters(OAuthFailureRedirectFilter)
@@ -144,10 +152,12 @@ export class AuthController {
     return res.redirect(getOAuthRedirectUrl(this.configService));
   }
 
+  @SwaggerOAuthLoginDocs('GitHub')
   @Get('github')
   @UseGuards(GitHubAuthGuard)
   githubLogin() {}
 
+  @SwaggerOAuthCallbackDocs('GitHub')
   @Get('github/callback')
   @UseGuards(GitHubAuthGuard)
   @UseFilters(OAuthFailureRedirectFilter)
@@ -165,10 +175,12 @@ export class AuthController {
     return res.redirect(getOAuthRedirectUrl(this.configService));
   }
 
+  @SwaggerOAuthLoginDocs('Microsoft')
   @Get('microsoft')
   @UseGuards(MicrosoftAuthGuard)
   microsoftLogin() {}
 
+  @SwaggerOAuthCallbackDocs('Microsoft')
   @Get('microsoft/callback')
   @UseGuards(MicrosoftAuthGuard)
   @UseFilters(OAuthFailureRedirectFilter)
@@ -186,6 +198,7 @@ export class AuthController {
     return res.redirect(getOAuthRedirectUrl(this.configService));
   }
 
+  @SwaggerOAuthSuccessDocs()
   @Get('oauth/success')
   oauthSuccess() {
     return {
@@ -193,6 +206,7 @@ export class AuthController {
     };
   }
 
+  @SwaggerOAuthFailureDocs()
   @Get('oauth/failure')
   oauthFailure() {
     return {
