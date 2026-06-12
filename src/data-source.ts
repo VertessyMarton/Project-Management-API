@@ -9,6 +9,7 @@ import { ProjectMembers } from './project/entities/project-members.entity';
 import { Task } from './task/entities/task.entity';
 import { Comment } from './comment/entities/comment.entity';
 import { RefreshToken } from './auth/entities/refresh-token.entity';
+import { OauthAccount } from './auth/entities/oauth-account.entity';
 
 const getEnv = (name: string): string => {
   const value = process.env[name];
@@ -34,7 +35,16 @@ export default new DataSource({
   password: getEnv('DB_PASSWORD'),
   database: getEnv('DB_DATABASE'),
   ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
-  entities: [User, Otp, Project, ProjectMembers, Task, Comment, RefreshToken],
+  entities: [
+    User,
+    Otp,
+    Project,
+    ProjectMembers,
+    Task,
+    Comment,
+    RefreshToken,
+    OauthAccount,
+  ],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   synchronize: false,
 });

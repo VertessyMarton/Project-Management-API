@@ -20,6 +20,7 @@ import { AdminModule } from './admin/admin.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { RefreshToken } from './auth/entities/refresh-token.entity';
+import { OauthAccount } from './auth/entities/oauth-account.entity';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { RefreshToken } from './auth/entities/refresh-token.entity';
           Task,
           Comment,
           RefreshToken,
+          OauthAccount,
         ],
         synchronize: false,
       }),
