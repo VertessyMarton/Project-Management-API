@@ -38,6 +38,18 @@ jobs:
       REFRESH_JWT_EXPIRES_IN: 7d
       EMAIL_PROVIDER: console
       NODE_ENV: test
+      GOOGLE_CLIENT_ID: test_google_client_id
+      GOOGLE_CLIENT_SECRET: test_google_client_secret
+      GOOGLE_CALLBACK_TEST_URL: http://localhost:3000/api/auth/google/callback
+      GITHUB_CLIENT_ID: test_github_client_id
+      GITHUB_CLIENT_SECRET: test_github_client_secret
+      GITHUB_CALLBACK_TEST_URL: http://localhost:3000/api/auth/github/callback
+      MICROSOFT_CLIENT_ID: test_microsoft_client_id
+      MICROSOFT_CLIENT_SECRET: test_microsoft_client_secret
+      MICROSOFT_TENANT_ID: common
+      MICROSOFT_CALLBACK_TEST_URL: http://localhost:3000/api/auth/microsoft/callback
+      OAUTH_SUCCESS_REDIRECT_TEST_URL: http://localhost:3000/api/auth/oauth/success
+      OAUTH_FAILURE_REDIRECT_URL: http://localhost:3000/api/auth/oauth/failure
 
     steps:
       - name: Checkout code
