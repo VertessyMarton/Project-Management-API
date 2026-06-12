@@ -15,6 +15,7 @@ import { UserRoleEnum } from '../enums/user-role.enum';
 import { Task } from 'src/task/entities/task.entity';
 import { Comment } from 'src/comment/entities/comment.entity';
 import { RefreshToken } from 'src/auth/entities/refresh-token.entity';
+import { OauthAccount } from 'src/auth/entities/oauth-account.entity';
 
 @Entity()
 export class User {
@@ -28,7 +29,7 @@ export class User {
   email: string;
 
   @Exclude({ toPlainOnly: true })
-  @Column()
+  @Column({ nullable: true })
   password: string;
 
   @OneToMany(() => Otp, (otp) => otp.user)
@@ -48,6 +49,9 @@ export class User {
 
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
   refreshToken: RefreshToken[];
+
+  @OneToMany(() => OauthAccount, (oauthAccount) => oauthAccount.user)
+  oauthAccount: OauthAccount[];
 
   @Column({ default: UserRoleEnum.USER, type: 'enum', enum: UserRoleEnum })
   role: UserRoleEnum;
