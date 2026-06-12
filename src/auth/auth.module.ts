@@ -13,17 +13,28 @@ import { EmailModule } from 'src/email/email.module';
 import { OtpModule } from 'src/otp/otp.module';
 import { RefreshTokenService } from './refresh-token.service';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { OauthAccount } from './entities/oauth-account.entity';
+import { OAuthService } from './oauth.service';
+import { GoogleStrategy } from './strategies/google-auth.strategy';
+import { GithubStrategy } from './strategies/github-auth.strategy';
+import { MicrosoftStrategy } from './strategies/microsoft-auth.strategy';
 
 @Module({
   imports: [
     PassportModule,
-    TypeOrmModule.forFeature([User, RefreshToken]),
+    TypeOrmModule.forFeature([User, RefreshToken, OauthAccount]),
     JwtModule.registerAsync(jwtConfig.asProvider()),
     ConfigModule.forFeature(jwtConfig),
     EmailModule,
     OtpModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, RefreshTokenService, LocalStrategy, JwtStrategy],
+  providers: [
+    AuthService,
+    RefreshTokenService,
+    OAuthService,
+    LocalStrategy,
+    JwtStrategy,
+  ],
 })
 export class AuthModule {}
