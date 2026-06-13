@@ -8,7 +8,7 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Project } from './entities/project.entity';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { ProjectMembers } from './entities/project-members.entity';
 import { ProjectRoleEnum } from './enums/project-role.enum';
 import { User } from 'src/user/entities/user.entity';
@@ -32,18 +32,18 @@ export class ProjectService {
     });
 
     await this.projectMemberRepository.save({
-      project: { id: project.id },
-      user: { id: userId },
+      projectId: project.id,
+      userId,
       role: ProjectRoleEnum.OWNER,
     });
 
     return project;
   }
 
-  async getProject(id: number) {
+  async getProject(projectId: number) {
     const project = await this.projectRepository.findOne({
       where: {
-        id: id,
+        id: projectId,
       },
     });
 
@@ -58,15 +58,15 @@ export class ProjectService {
     return await this.projectRepository.find({
       where: {
         projectMembers: {
-          user: { id: userId },
+          userId,
         },
       },
     });
   }
 
-  async removeProject(id: number) {
+  async removeProject(projectId: number) {
     const project = await this.projectRepository.delete({
-      id,
+      id: projectId,
     });
 
     if (project.affected === 0) {
@@ -75,7 +75,7 @@ export class ProjectService {
     return { message: 'Project deleted' };
   }
 
-  async updateProject(id: number, dto: UpdateProjectDto) {
+  async updateProject(projectId: number, dto: UpdateProjectDto) {
     const updateData: Partial<Pick<Project, 'name' | 'description'>> = {};
 
     if ('name' in dto) {
@@ -92,14 +92,17 @@ export class ProjectService {
       );
     }
 
-    const project = await this.projectRepository.update({ id: id }, updateData);
+    const project = await this.projectRepository.update(
+      { id: projectId },
+      updateData,
+    );
 
     if (project.affected === 0) {
       throw new NotFoundException('Project not found');
     }
 
     return await this.projectRepository.findOne({
-      where: { id: id },
+      where: { id: projectId },
     });
   }
 
@@ -114,8 +117,8 @@ export class ProjectService {
 
     const hasRole = await this.projectMemberRepository.findOne({
       where: {
-        project: { id: projectId },
-        user: { id: user.id },
+        projectId,
+        userId: user.id,
       },
     });
 
@@ -124,8 +127,8 @@ export class ProjectService {
     }
 
     return await this.projectMemberRepository.save({
-      project: { id: projectId },
-      user: { id: user.id },
+      projectId,
+      userId: user.id,
       role: dto.role,
     });
   }
@@ -141,8 +144,8 @@ export class ProjectService {
 
     const hasRole = await this.projectMemberRepository.findOne({
       where: {
-        project: { id: projectId },
-        user: { id: user.id },
+        projectId,
+        userId: user.id,
       },
     });
 
@@ -151,8 +154,8 @@ export class ProjectService {
     }
 
     return await this.projectMemberRepository.delete({
-      project: { id: projectId },
-      user: { id: user.id },
+      projectId,
+      userId: user.id,
     });
   }
 }

@@ -26,42 +26,42 @@ export class TaskService {
       throw new NotFoundException('Resource not found');
     }
 
-    const savedTask = await this.taskRepository.save({
+    const record = await this.taskRepository.save({
       title: dto.title,
       description: dto.description,
       status: dto.status,
       dueDate: dto.dueDate,
-      createdBy: { id: createdById },
-      project: { id: projectId },
+      createdById,
+      projectId,
       assignee: { id: dto.assignee },
     });
     return await this.taskRepository.findOne({
-      where: { id: savedTask.id },
+      where: { id: record.id, projectId },
     });
   }
 
   async findAllTask(projectId: number) {
     const tasks = await this.taskRepository.find({
-      where: { project: { id: projectId } },
+      where: { projectId },
     });
 
     if (tasks.length === 0) {
-      throw new NotFoundException('Task not found');
+      throw new NotFoundException('Resource not found');
     }
     return tasks;
   }
 
   async findOneTask(projectId: number, taskId: number) {
     const task = await this.taskRepository.findOne({
-      where: { id: taskId, project: { id: projectId } },
+      where: { id: taskId, projectId },
     });
     if (!task) {
-      throw new NotFoundException('Task not found');
+      throw new NotFoundException('Resource not found');
     }
     return task;
   }
 
-  async updateTask(taskId: number, dto: UpdateTaskDto) {
+  async updateTask(taskId: number, projectId: number, dto: UpdateTaskDto) {
     const updateData: Partial<
       Pick<Task, 'title' | 'description' | 'status' | 'dueDate' | 'assignee'>
     > = {};
@@ -84,7 +84,7 @@ export class TaskService {
         const user = await this.userRepository.findOneBy({ id: dto.assignee });
 
         if (!user) {
-          throw new NotFoundException('Assignee not found');
+          throw new NotFoundException('Resource not found');
         }
 
         updateData.assignee = user;
@@ -97,19 +97,28 @@ export class TaskService {
       );
     }
 
-    const task = await this.taskRepository.update({ id: taskId }, updateData);
+    const task = await this.taskRepository.update(
+      { id: taskId, projectId },
+      updateData,
+    );
 
     if (task.affected === 0) {
-      throw new NotFoundException('Project not found');
+      throw new NotFoundException('Resource not found');
     }
 
     return await this.taskRepository.findOne({
-      where: { id: taskId },
+      where: { id: taskId, projectId },
     });
   }
 
-  async removeTask(TaskId: number) {
-    await this.taskRepository.delete(TaskId);
+  async removeTask(TaskId: number, projectId: number) {
+    const record = await this.taskRepository.delete({
+      id: TaskId,
+      projectId,
+    });
+    if (record.affected === 0) {
+      throw new NotFoundException('Resource not found');
+    }
     return { message: 'Task deleted' };
   }
 }

@@ -15,32 +15,45 @@ export class CommentService {
 
   async createComment(
     dto: CreateCommentDto,
-    userId: number,
+    authorId: number,
     taskId: number,
     projectId: number,
   ) {
-    const task = await this.taskRepository.findOne({ where: { id: taskId } });
-    if (task?.projectId !== +projectId) {
+    const task = await this.taskRepository.findOne({
+      where: { id: taskId, projectId },
+    });
+
+    if (!task) {
       throw new NotFoundException('Resource not found');
     }
 
     const comment = await this.commentRepository.save({
       content: dto.content,
-      author: { id: userId },
-      task: { id: taskId },
+      authorId,
+      taskId,
     });
     return comment;
   }
 
-  async findAllComment(taskId: number) {
-    return await this.commentRepository.find({
-      where: { task: { id: taskId } },
+  async findAllComment(taskId: number, projectId: number) {
+    const record = await this.commentRepository.find({
+      where: { task: { id: taskId, projectId } },
     });
+
+    if (record.length === 0) {
+      throw new NotFoundException('Resource not found');
+    }
+
+    if (!record) {
+      throw new NotFoundException('Resource not found');
+    }
+
+    return record;
   }
 
-  async findOneComment(commentId: number) {
+  async findOneComment(commentId: number, taskId: number, projectId: number) {
     const comment = await this.commentRepository.findOne({
-      where: { id: commentId },
+      where: { id: commentId, task: { id: taskId, projectId } },
     });
     if (!comment) {
       throw new NotFoundException('Resource not found');
@@ -51,29 +64,57 @@ export class CommentService {
   async updateComment(
     commentId: number,
     authorId: number,
+    taskId: number,
+    projectId: number,
     dto: UpdateCommentDto,
   ) {
-    const comment = await this.commentRepository.update(
-      { id: commentId, author: { id: authorId } },
+    const comment = await this.commentRepository.findOne({
+      where: {
+        id: commentId,
+        authorId,
+        task: { id: taskId, projectId },
+      },
+    });
+
+    if (!comment) throw new NotFoundException('Resource not found');
+
+    const record = await this.commentRepository.update(
+      { id: commentId, authorId, taskId },
       {
         content: dto.content,
       },
     );
 
-    if (comment.affected === 0) {
+    if (record.affected === 0) {
       throw new NotFoundException('Resource not found');
     }
     return await this.commentRepository.findOne({
-      where: { id: commentId },
+      where: { id: commentId, task: { id: taskId, projectId } },
     });
   }
 
-  async removeComment(commentId: number, authorId: number) {
-    const comment = await this.commentRepository.delete({
-      id: commentId,
-      author: { id: authorId },
+  async removeComment(
+    commentId: number,
+    authorId: number,
+    taskId: number,
+    projectId: number,
+  ) {
+    const comment = await this.commentRepository.findOne({
+      where: {
+        id: commentId,
+        authorId,
+        task: { id: taskId, projectId },
+      },
     });
-    if (comment.affected === 0) {
+
+    if (!comment) throw new NotFoundException('Resource not found');
+
+    const record = await this.commentRepository.delete({
+      id: commentId,
+      authorId,
+      taskId,
+    });
+    if (record.affected === 0) {
       throw new NotFoundException('Resource not found');
     }
     return { message: 'Comment deleted' };

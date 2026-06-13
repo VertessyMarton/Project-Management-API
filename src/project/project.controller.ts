@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Request,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -47,7 +48,7 @@ export class ProjectController {
   @ReadLimit()
   @ProjectRoles(['owner', 'member', 'viewer'])
   @Get(':projectId')
-  async getProject(@Param('projectId') id: number) {
+  async getProject(@Param('projectId', ParseIntPipe) id: number) {
     return await this.projectService.getProject(id);
   }
 
@@ -62,7 +63,7 @@ export class ProjectController {
   @MutationLimit()
   @ProjectRoles(['owner'])
   @Delete(':projectId')
-  async removeProject(@Param('projectId') id: number) {
+  async removeProject(@Param('projectId', ParseIntPipe) id: number) {
     return await this.projectService.removeProject(id);
   }
 
@@ -71,7 +72,7 @@ export class ProjectController {
   @ProjectRoles(['owner'])
   @Patch(':projectId')
   async updateProject(
-    @Param('projectId') id: number,
+    @Param('projectId', ParseIntPipe) id: number,
     @Body() dto: UpdateProjectDto,
   ) {
     return await this.projectService.updateProject(id, dto);
@@ -82,7 +83,7 @@ export class ProjectController {
   @ProjectRoles(['owner'])
   @Post(':projectId')
   async addProjectMember(
-    @Param('projectId') id: number,
+    @Param('projectId', ParseIntPipe) id: number,
     @Body() dto: AddMemberDto,
   ) {
     return await this.projectService.addProjectMember(id, dto);
@@ -93,7 +94,7 @@ export class ProjectController {
   @ProjectRoles(['owner'])
   @Delete(':projectId/members')
   async removeProjectMember(
-    @Param('projectId') id: number,
+    @Param('projectId', ParseIntPipe) id: number,
     @Body() dto: RemoveMemberDto,
   ) {
     return await this.projectService.removeProjectMember(id, dto);

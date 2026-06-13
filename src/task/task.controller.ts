@@ -39,18 +39,18 @@ export class TaskController {
   @Post(':projectId/tasks')
   async createTask(
     @Request() req,
-    @Param('projectId') id: number,
+    @Param('projectId', ParseIntPipe) projectId: number,
     @Body() dto: CreateTaskDto,
   ) {
-    return await this.taskService.createTask(dto, req.user.id, id);
+    return await this.taskService.createTask(dto, req.user.id, projectId);
   }
 
   @FindAllTaskDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
   @ReadLimit()
   @Get(':projectId/tasks')
-  findAllTask(@Param('projectId') id: number) {
-    return this.taskService.findAllTask(id);
+  findAllTask(@Param('projectId', ParseIntPipe) projectId: number) {
+    return this.taskService.findAllTask(projectId);
   }
 
   @FindOneTaskDocs()
@@ -58,7 +58,7 @@ export class TaskController {
   @ReadLimit()
   @Get(':projectId/tasks/:taskId')
   findOneTask(
-    @Param('projectId') projectId: number,
+    @Param('projectId', ParseIntPipe) projectId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
   ) {
     return this.taskService.findOneTask(projectId, taskId);
@@ -68,15 +68,22 @@ export class TaskController {
   @ProjectRoles(['owner', 'member'])
   @MutationLimit()
   @Patch(':projectId/tasks/:taskId')
-  updateTask(@Param('taskId') id: number, @Body() dto: UpdateTaskDto) {
-    return this.taskService.updateTask(id, dto);
+  updateTask(
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @Body() dto: UpdateTaskDto,
+  ) {
+    return this.taskService.updateTask(taskId, projectId, dto);
   }
 
   @RemoveTaskDocs()
   @ProjectRoles(['owner', 'member'])
   @MutationLimit()
   @Delete(':projectId/tasks/:taskId')
-  removeTask(@Param('taskId') id: number) {
-    return this.taskService.removeTask(id);
+  removeTask(
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Param('taskId', ParseIntPipe) taskId: number,
+  ) {
+    return this.taskService.removeTask(taskId, projectId);
   }
 }

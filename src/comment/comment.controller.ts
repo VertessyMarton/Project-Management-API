@@ -29,17 +29,17 @@ import {
 } from 'src/common/decorators/rate-limit.decorator';
 
 @UseGuards(JwtAuthGuard, ProjectRolesGuard)
-@Controller('projects/:projectId/tasks/:taskId/comments')
+@Controller('projects/:projectId')
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
   @CreateCommentDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
   @MutationLimit()
-  @Post()
+  @Post('/tasks/:taskId/comments')
   async createComment(
     @Request() req,
-    @Param('projectId') projectId: number,
+    @Param('projectId', ParseIntPipe) projectId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
     @Body() dto: CreateCommentDto,
   ) {
@@ -54,31 +54,46 @@ export class CommentController {
   @FindAllCommentDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
   @ReadLimit()
-  @Get()
-  async findAllComment(@Param('taskId', ParseIntPipe) taskId: number) {
-    return await this.commentService.findAllComment(taskId);
+  @Get('/tasks/:taskId/comments')
+  async findAllComment(
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @Param('projectId', ParseIntPipe) projectId: number,
+  ) {
+    return await this.commentService.findAllComment(taskId, projectId);
   }
 
   @FindOneCommentDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
   @ReadLimit()
-  @Get(':commentId')
-  async findOneComment(@Param('commentId', ParseIntPipe) commentId: string) {
-    return await this.commentService.findOneComment(+commentId);
+  @Get('/tasks/:taskId/comments/:commentId')
+  async findOneComment(
+    @Param('commentId', ParseIntPipe) commentId: number,
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @Param('projectId', ParseIntPipe) projectId: number,
+  ) {
+    return await this.commentService.findOneComment(
+      commentId,
+      taskId,
+      projectId,
+    );
   }
 
   @UpdateCommentDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
   @MutationLimit()
-  @Patch(':commentId')
+  @Patch('/tasks/:taskId/comments/:commentId')
   async updateComment(
     @Request() req,
-    @Param('commentId', ParseIntPipe) commentId: string,
+    @Param('commentId', ParseIntPipe) commentId: number,
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @Param('projectId', ParseIntPipe) projectId: number,
     @Body() dto: UpdateCommentDto,
   ) {
     return await this.commentService.updateComment(
-      +commentId,
+      commentId,
       req.user.id,
+      taskId,
+      projectId,
       dto,
     );
   }
@@ -86,8 +101,18 @@ export class CommentController {
   @RemoveCommentDocs()
   @ProjectRoles(['owner', 'member', 'viewer'])
   @MutationLimit()
-  @Delete(':commentId')
-  async removeComment(@Request() req, @Param('commentId') commentId: string) {
-    return await this.commentService.removeComment(+commentId, req.user.id);
+  @Delete('/tasks/:taskId/comments/:commentId')
+  async removeComment(
+    @Request() req,
+    @Param('commentId', ParseIntPipe) commentId: number,
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @Param('projectId', ParseIntPipe) projectId: number,
+  ) {
+    return await this.commentService.removeComment(
+      commentId,
+      req.user.id,
+      taskId,
+      projectId,
+    );
   }
 }
