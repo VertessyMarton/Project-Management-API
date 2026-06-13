@@ -153,9 +153,15 @@ export class ProjectService {
       throw new ForbiddenException('Cannot remove user from the project');
     }
 
-    return await this.projectMemberRepository.delete({
+    const deleted = await this.projectMemberRepository.delete({
       projectId,
       userId: user.id,
     });
+
+    if (deleted.affected === 0) {
+      throw new BadRequestException('User cannot be removed from the project');
+    }
+
+    return { message: 'User deleted from the project' };
   }
 }
