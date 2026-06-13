@@ -48,12 +48,12 @@ describe('TaskController', () => {
     expect(taskService.findOneTask).toHaveBeenCalledWith(10, 5);
   });
 
-  it('updates a task by task id', () => {
+  it('updates a task by project and task ids', () => {
     const dto = { status: TaskStatusEnum.DONE };
     const task = { id: 5, ...dto };
     taskService.updateTask.mockReturnValue(task);
 
-    expect(controller.updateTask(5, dto)).toBe(task);
-    expect(taskService.updateTask).toHaveBeenCalledWith(5, dto);
+    expect(controller.updateTask(10, 5, dto)).toBe(task);
+    expect(taskService.updateTask).toHaveBeenCalledWith(5, 10, dto);
   });
 });

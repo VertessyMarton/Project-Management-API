@@ -33,12 +33,12 @@ describe('CommentController', () => {
     expect(commentService.createComment).toHaveBeenCalledWith(dto, 1, 3, 10);
   });
 
-  it('converts comment id param before lookup', async () => {
+  it('finds a comment with comment, task, and project ids', async () => {
     const comment = { id: 7 };
     commentService.findOneComment.mockResolvedValue(comment);
 
-    await expect(controller.findOneComment('7')).resolves.toBe(comment);
-    expect(commentService.findOneComment).toHaveBeenCalledWith(7);
+    await expect(controller.findOneComment(7, 3, 10)).resolves.toBe(comment);
+    expect(commentService.findOneComment).toHaveBeenCalledWith(7, 3, 10);
   });
 
   it('updates only the request users comment', async () => {
@@ -47,8 +47,32 @@ describe('CommentController', () => {
     commentService.updateComment.mockResolvedValue(comment);
 
     await expect(
-      controller.updateComment({ user: { id: 1 } }, '7', dto),
+      controller.updateComment({ user: { id: 1 } }, 7, 3, 10, dto),
     ).resolves.toBe(comment);
-    expect(commentService.updateComment).toHaveBeenCalledWith(7, 1, dto);
+    expect(commentService.updateComment).toHaveBeenCalledWith(
+      7,
+      1,
+      3,
+      10,
+      dto,
+    );
+  });
+
+  it('lists comments with task and project ids', async () => {
+    const comments = [{ id: 7 }];
+    commentService.findAllComment.mockResolvedValue(comments);
+
+    await expect(controller.findAllComment(3, 10)).resolves.toBe(comments);
+    expect(commentService.findAllComment).toHaveBeenCalledWith(3, 10);
+  });
+
+  it('removes comments with user, task, and project ids', async () => {
+    const result = { message: 'Comment deleted' };
+    commentService.removeComment.mockResolvedValue(result);
+
+    await expect(
+      controller.removeComment({ user: { id: 1 } }, 7, 3, 10),
+    ).resolves.toBe(result);
+    expect(commentService.removeComment).toHaveBeenCalledWith(7, 1, 3, 10);
   });
 });

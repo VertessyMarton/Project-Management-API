@@ -18,6 +18,7 @@ describe('ProjectService', () => {
   let projectMemberRepository: {
     save: jest.Mock;
     findOne: jest.Mock;
+    delete: jest.Mock;
   };
   let userRepository: {
     findOne: jest.Mock;
@@ -34,6 +35,7 @@ describe('ProjectService', () => {
     projectMemberRepository = {
       save: jest.fn(),
       findOne: jest.fn(),
+      delete: jest.fn(),
     };
     userRepository = {
       findOne: jest.fn(),
@@ -55,8 +57,8 @@ describe('ProjectService', () => {
     ).resolves.toBe(project);
 
     expect(projectMemberRepository.save).toHaveBeenCalledWith({
-      project: { id: 10 },
-      user: { id: 1 },
+      projectId: 10,
+      userId: 1,
       role: ProjectRoleEnum.OWNER,
     });
   });

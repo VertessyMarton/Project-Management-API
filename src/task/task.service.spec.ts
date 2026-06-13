@@ -51,9 +51,12 @@ describe('TaskService', () => {
       description: dto.description,
       status: dto.status,
       dueDate: dto.dueDate,
-      createdBy: { id: 1 },
-      project: { id: 10 },
+      createdById: 1,
+      projectId: 10,
       assignee: { id: 2 },
+    });
+    expect(taskRepository.findOne).toHaveBeenCalledWith({
+      where: { id: 5, projectId: 10 },
     });
   });
 
@@ -66,9 +69,30 @@ describe('TaskService', () => {
   });
 
   it('rejects empty task updates', async () => {
-    await expect(service.updateTask(1, {} as any)).rejects.toBeInstanceOf(
+    await expect(service.updateTask(1, 10, {} as any)).rejects.toBeInstanceOf(
       BadRequestException,
     );
     expect(taskRepository.update).not.toHaveBeenCalled();
+  });
+
+  it('updates a task only inside the selected project', async () => {
+    const dto = { status: TaskStatusEnum.DONE };
+    const task = { id: 1, projectId: 10, status: TaskStatusEnum.DONE };
+    taskRepository.update.mockResolvedValue({ affected: 1 });
+    taskRepository.findOne.mockResolvedValue(task);
+
+    await expect(service.updateTask(1, 10, dto)).resolves.toBe(task);
+    expect(taskRepository.update).toHaveBeenCalledWith(
+      { id: 1, projectId: 10 },
+      { status: TaskStatusEnum.DONE },
+    );
+  });
+
+  it('throws when deleting a task outside the selected project', async () => {
+    taskRepository.delete.mockResolvedValue({ affected: 0 });
+
+    await expect(service.removeTask(1, 10)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 });
