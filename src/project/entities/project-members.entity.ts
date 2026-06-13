@@ -23,12 +23,18 @@ export class ProjectMembers {
   @JoinColumn({ name: 'project_id' })
   project: Project;
 
+  @Column({ name: 'project_id' })
+  projectId: number;
+
   @ManyToOne(() => User, (user) => user.projectMembers, {
     nullable: false,
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @Column({ name: 'user_id' })
+  userId: number;
 
   @Column({ type: 'enum', enum: ProjectRoleEnum })
   role: ProjectRoleEnum;

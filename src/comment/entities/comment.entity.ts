@@ -8,7 +8,6 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
-  RelationId,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -27,7 +26,7 @@ export class Comment {
   @JoinColumn({ name: 'author_id' })
   author: User;
 
-  @RelationId((comment: Comment) => comment.author)
+  @Column({ name: 'author_id' })
   authorId: number;
 
   @Index()
@@ -38,7 +37,7 @@ export class Comment {
   @JoinColumn({ name: 'task_id' })
   task: Task;
 
-  @RelationId((comment: Comment) => comment.task)
+  @Column({ name: 'task_id' })
   taskId: number;
 
   @CreateDateColumn({ name: 'created_at' })

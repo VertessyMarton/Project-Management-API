@@ -9,12 +9,10 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
-  RelationId,
   UpdateDateColumn,
 } from 'typeorm';
 import { TaskStatusEnum } from '../enums/task-status.enum';
 import { Comment } from 'src/comment/entities/comment.entity';
-import { CommentController } from 'src/comment/comment.controller';
 
 @Entity()
 export class Task {
@@ -42,7 +40,7 @@ export class Task {
   @JoinColumn({ name: 'created_by_id' })
   createdBy: User;
 
-  @RelationId((task: Task) => task.createdBy)
+  @Column({ name: 'created_by_id', nullable: true })
   createdById: number;
 
   @ManyToOne(() => User, (user) => user.assignedTask, {
@@ -51,7 +49,7 @@ export class Task {
   @JoinColumn({ name: 'assignee_id' })
   assignee: User | null;
 
-  @RelationId((task: Task) => task.assignee)
+  @Column({ name: 'assignee_id', nullable: true })
   assigneeId: number | null;
 
   @Index()
@@ -62,7 +60,7 @@ export class Task {
   @JoinColumn({ name: 'project_id' })
   project: Project;
 
-  @RelationId((task: Task) => task.project)
+  @Column({ name: 'project_id' })
   projectId: number;
 
   @OneToMany(() => Comment, (comment) => comment.task)
