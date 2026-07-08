@@ -34,7 +34,7 @@ export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @CreateTaskDocs()
-  @ProjectRoles(['owner', 'member'])
+  @ProjectRoles(['owner', 'admin', 'member'])
   @MutationLimit()
   @Post(':projectId/tasks')
   async createTask(
@@ -54,7 +54,7 @@ export class TaskController {
   }
 
   @FindOneTaskDocs()
-  @ProjectRoles(['owner', 'member', 'viewer'])
+  @ProjectRoles(['owner', 'admin', 'member', 'viewer'])
   @ReadLimit()
   @Get(':projectId/tasks/:taskId')
   findOneTask(
@@ -65,7 +65,7 @@ export class TaskController {
   }
 
   @UpdateTaskDocs()
-  @ProjectRoles(['owner', 'member'])
+  @ProjectRoles(['owner', 'admin', 'member'])
   @MutationLimit()
   @Patch(':projectId/tasks/:taskId')
   updateTask(
@@ -77,7 +77,7 @@ export class TaskController {
   }
 
   @RemoveTaskDocs()
-  @ProjectRoles(['owner', 'member'])
+  @ProjectRoles(['owner', 'admin', 'member'])
   @MutationLimit()
   @Delete(':projectId/tasks/:taskId')
   removeTask(

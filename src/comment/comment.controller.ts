@@ -34,7 +34,7 @@ export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
   @CreateCommentDocs()
-  @ProjectRoles(['owner', 'member', 'viewer'])
+  @ProjectRoles(['owner', 'admin', 'member', 'viewer'])
   @MutationLimit()
   @Post('/tasks/:taskId/comments')
   async createComment(
@@ -52,7 +52,7 @@ export class CommentController {
   }
 
   @FindAllCommentDocs()
-  @ProjectRoles(['owner', 'member', 'viewer'])
+  @ProjectRoles(['owner', 'admin', 'member', 'viewer'])
   @ReadLimit()
   @Get('/tasks/:taskId/comments')
   async findAllComment(
@@ -63,7 +63,7 @@ export class CommentController {
   }
 
   @FindOneCommentDocs()
-  @ProjectRoles(['owner', 'member', 'viewer'])
+  @ProjectRoles(['owner', 'admin', 'member', 'viewer'])
   @ReadLimit()
   @Get('/tasks/:taskId/comments/:commentId')
   async findOneComment(
@@ -79,7 +79,7 @@ export class CommentController {
   }
 
   @UpdateCommentDocs()
-  @ProjectRoles(['owner', 'member', 'viewer'])
+  @ProjectRoles(['owner', 'admin', 'member', 'viewer'])
   @MutationLimit()
   @Patch('/tasks/:taskId/comments/:commentId')
   async updateComment(
@@ -99,7 +99,7 @@ export class CommentController {
   }
 
   @RemoveCommentDocs()
-  @ProjectRoles(['owner', 'member', 'viewer'])
+  @ProjectRoles(['owner', 'admin', 'member', 'viewer'])
   @MutationLimit()
   @Delete('/tasks/:taskId/comments/:commentId')
   async removeComment(
