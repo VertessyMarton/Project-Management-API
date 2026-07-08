@@ -25,6 +25,7 @@ import {
   RemoveProjectDocs,
   RemoveProjectMemberDocs,
   UpdateProjectDocs,
+  UpdateProjectMemberDocs,
 } from 'src/common/decorators/swagger/project-docs.decorator';
 import {
   MutationLimit,
@@ -101,6 +102,7 @@ export class ProjectController {
     return await this.projectService.removeProjectMember(id, dto);
   }
 
+  @UpdateProjectMemberDocs()
   @MutationLimit()
   @ProjectRoles(['owner', 'admin'])
   @Patch(':projectId/members')

@@ -8,7 +8,16 @@ export class AddMemberDto {
   @IsString()
   email: string;
 
-  @ApiProperty({ example: ProjectRoleEnum.MEMBER, enum: ProjectRoleEnum })
+  @ApiProperty({
+    example: ProjectRoleEnum.MEMBER,
+    enum: [
+      ProjectRoleEnum.ADMIN,
+      ProjectRoleEnum.MEMBER,
+      ProjectRoleEnum.VIEWER,
+    ],
+    description:
+      'Project role to assign. The owner role is reserved for project creation and cannot be assigned through member endpoints.',
+  })
   @IsEnum(ProjectRoleEnum)
   @IsString()
   role: ProjectRoleEnum;

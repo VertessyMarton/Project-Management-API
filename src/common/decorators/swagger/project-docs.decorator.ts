@@ -2,6 +2,7 @@ import { applyDecorators } from '@nestjs/common';
 import { ApiBody, ApiOperation } from '@nestjs/swagger';
 
 import { AddMemberDto } from 'src/project/dto/add-member.dto';
+import { ChangeMemberDto } from 'src/project/dto/change-member.dto';
 import { CreateProjectDto } from 'src/project/dto/create-project.dto';
 import { UpdateProjectDto } from 'src/project/dto/update-project.dto';
 import {
@@ -17,6 +18,11 @@ import { projectExample, projectMemberExample } from './swagger-examples';
 import { RemoveMemberDto } from 'src/project/dto/remove-member.dto';
 
 const projectIdParam = IdParam('projectId', 'Project id');
+const projectMemberRoleUpdateExample = {
+  projectId: 1,
+  userId: 2,
+  role: 'admin',
+};
 const projectNotFound = NotFoundResponse(
   'Thrown when the project does not exist or does not belong to the authenticated user',
   {
@@ -106,7 +112,7 @@ export function AddProjectMemberDocs() {
       },
     ),
     ForbiddenResponse(
-      'Thrown when the invited user is already a project member, or the authenticated user is not allowed to add members',
+      'Thrown when the invited user is already a project member, the requested role is owner, or the authenticated user is not allowed to add members',
       {
         message: 'Cannot add user to the project',
         error: 'Forbidden',
@@ -122,9 +128,11 @@ export function RemoveProjectMemberDocs() {
     BearerAuthDocs(),
     projectIdParam,
     ApiBody({ type: RemoveMemberDto }),
-    OkResponse('Project member removed', projectMemberExample),
+    OkResponse('Project member removed', {
+      message: 'User deleted from the project',
+    }),
     BadRequestResponse(
-      'Thrown when the request body fails validation or the invited email does not belong to an existing user',
+      'Thrown when the request body fails validation or the target email does not belong to an existing user',
       {
         message: 'User cannot be removed from the project',
         error: 'Bad Request',
@@ -132,9 +140,35 @@ export function RemoveProjectMemberDocs() {
       },
     ),
     ForbiddenResponse(
-      'Thrown when the user is not a member of the project, or the authenticated user is not allowed to add members',
+      'Thrown when the user is not a project member, the target user is the project owner, or the authenticated user is not allowed to remove members',
       {
         message: 'Cannot remove user from the project',
+        error: 'Forbidden',
+        statusCode: 403,
+      },
+    ),
+  );
+}
+
+export function UpdateProjectMemberDocs() {
+  return applyDecorators(
+    ApiOperation({ summary: 'Update project member role' }),
+    BearerAuthDocs(),
+    projectIdParam,
+    ApiBody({ type: ChangeMemberDto }),
+    OkResponse('Project member role updated', projectMemberRoleUpdateExample),
+    BadRequestResponse(
+      'Thrown when the request body fails validation or the target email does not belong to an existing user',
+      {
+        message: 'User is not a member of this project',
+        error: 'Bad Request',
+        statusCode: 400,
+      },
+    ),
+    ForbiddenResponse(
+      'Thrown when the user is not a project member, the target role is owner, the target user is the project owner, the role is unchanged, or the authenticated user is not allowed to update members',
+      {
+        message: 'Cannot change member role',
         error: 'Forbidden',
         statusCode: 403,
       },
