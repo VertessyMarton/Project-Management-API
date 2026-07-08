@@ -14,6 +14,7 @@ import { ProjectRoleEnum } from './enums/project-role.enum';
 import { User } from 'src/user/entities/user.entity';
 import { AddMemberDto } from './dto/add-member.dto';
 import { RemoveMemberDto } from './dto/remove-member.dto';
+import { ChangeMemberDto } from './dto/change-member.dto';
 
 @Injectable()
 export class ProjectService {
@@ -107,6 +108,10 @@ export class ProjectService {
   }
 
   async addProjectMember(projectId: number, dto: AddMemberDto) {
+    if (dto.role === ProjectRoleEnum.OWNER) {
+      throw new ForbiddenException('Cannot add user as project owner');
+    }
+
     const user = await this.userRepository.findOne({
       where: { email: dto.email },
     });
@@ -153,6 +158,10 @@ export class ProjectService {
       throw new ForbiddenException('Cannot remove user from the project');
     }
 
+    if (hasRole.role === ProjectRoleEnum.OWNER) {
+      throw new ForbiddenException('Cannot remove user from the projects');
+    }
+
     const deleted = await this.projectMemberRepository.delete({
       projectId,
       userId: user.id,
@@ -163,5 +172,44 @@ export class ProjectService {
     }
 
     return { message: 'User deleted from the project' };
+  }
+
+  async updateProjectMemberStatus(projectId: number, dto: ChangeMemberDto) {
+    const user = await this.userRepository.findOne({
+      where: { email: dto.email },
+    });
+
+    if (!user) {
+      throw new BadRequestException('User is not a member of this project');
+    }
+
+    const hasRole = await this.projectMemberRepository.findOne({
+      where: {
+        projectId,
+        userId: user.id,
+      },
+    });
+
+    if (!hasRole) {
+      throw new ForbiddenException('Cannot change member role');
+    }
+    if (
+      dto.role === hasRole.role ||
+      dto.role === ProjectRoleEnum.OWNER ||
+      hasRole.role === ProjectRoleEnum.OWNER
+    ) {
+      throw new ForbiddenException('Cannot change member role');
+    }
+
+    await this.projectMemberRepository.update(
+      { projectId, userId: user.id },
+      { role: dto.role },
+    );
+
+    return {
+      projectId,
+      userId: user.id,
+      role: dto.role,
+    };
   }
 }
