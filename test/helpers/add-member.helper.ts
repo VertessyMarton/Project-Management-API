@@ -40,7 +40,7 @@ export const addMemberToProject = async (
   const ownerAccessToken = project.owner.accessToken;
 
   await request(app.getHttpServer())
-    .post(`/projects/${project.id}`)
+    .post(`/projects/${project.id}/members`)
     .set('Authorization', `Bearer ${ownerAccessToken}`)
     .send({
       email: member.user.email,

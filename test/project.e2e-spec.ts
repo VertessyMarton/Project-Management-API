@@ -138,6 +138,87 @@ describe('Project (e2e)', () => {
       .expect(200);
   });
 
+  it('owner cannot add another owner through members endpoint', async () => {
+    const project = await createProject(app, userRepository);
+    const member = await createAuthenticatedUser(app, userRepository);
+
+    await request(app.getHttpServer())
+      .post(`/projects/${project.id}/members`)
+      .set('Authorization', `Bearer ${project.owner.accessToken}`)
+      .send({
+        email: member.user.email,
+        role: ProjectRoleEnum.OWNER,
+      })
+      .expect(403);
+  });
+
+  it('owner can update member role to admin', async () => {
+    const record = await addMemberToProject(
+      app,
+      userRepository,
+      ProjectRoleEnum.MEMBER,
+    );
+
+    await request(app.getHttpServer())
+      .patch(`/projects/${record.project.id}/members`)
+      .set('Authorization', `Bearer ${record.owner.accessToken}`)
+      .send({
+        email: record.member.user.email,
+        role: ProjectRoleEnum.ADMIN,
+      })
+      .expect(200);
+  });
+
+  it('owner cannot update member role to owner', async () => {
+    const record = await addMemberToProject(
+      app,
+      userRepository,
+      ProjectRoleEnum.MEMBER,
+    );
+
+    await request(app.getHttpServer())
+      .patch(`/projects/${record.project.id}/members`)
+      .set('Authorization', `Bearer ${record.owner.accessToken}`)
+      .send({
+        email: record.member.user.email,
+        role: ProjectRoleEnum.OWNER,
+      })
+      .expect(403);
+  });
+
+  it('admin cannot update owner role', async () => {
+    const record = await addMemberToProject(
+      app,
+      userRepository,
+      ProjectRoleEnum.ADMIN,
+    );
+
+    await request(app.getHttpServer())
+      .patch(`/projects/${record.project.id}/members`)
+      .set('Authorization', `Bearer ${record.member.accessToken}`)
+      .send({
+        email: record.owner.user.email,
+        role: ProjectRoleEnum.MEMBER,
+      })
+      .expect(403);
+  });
+
+  it('admin cannot remove owner', async () => {
+    const record = await addMemberToProject(
+      app,
+      userRepository,
+      ProjectRoleEnum.ADMIN,
+    );
+
+    await request(app.getHttpServer())
+      .delete(`/projects/${record.project.id}/members`)
+      .set('Authorization', `Bearer ${record.member.accessToken}`)
+      .send({
+        email: record.owner.user.email,
+      })
+      .expect(403);
+  });
+
   it('member cannot remove other members', async () => {
     const record = await addMemberToProject(
       app,
