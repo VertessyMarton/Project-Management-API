@@ -31,6 +31,7 @@ import {
   ReadLimit,
 } from 'src/common/decorators/rate-limit.decorator';
 import { RemoveMemberDto } from './dto/remove-member.dto';
+import { ChangeMemberDto } from './dto/change-member.dto';
 
 @UseGuards(JwtAuthGuard, ProjectRolesGuard)
 @Controller('projects')
@@ -46,7 +47,7 @@ export class ProjectController {
 
   @GetProjectDocs()
   @ReadLimit()
-  @ProjectRoles(['owner', 'member', 'viewer'])
+  @ProjectRoles(['owner', 'admin', 'member', 'viewer'])
   @Get(':projectId')
   async getProject(@Param('projectId', ParseIntPipe) id: number) {
     return await this.projectService.getProject(id);
@@ -69,7 +70,7 @@ export class ProjectController {
 
   @UpdateProjectDocs()
   @MutationLimit()
-  @ProjectRoles(['owner'])
+  @ProjectRoles(['owner', 'admin'])
   @Patch(':projectId')
   async updateProject(
     @Param('projectId', ParseIntPipe) id: number,
@@ -80,8 +81,8 @@ export class ProjectController {
 
   @AddProjectMemberDocs()
   @MutationLimit()
-  @ProjectRoles(['owner'])
-  @Post(':projectId')
+  @ProjectRoles(['owner', 'admin'])
+  @Post(':projectId/members')
   async addProjectMember(
     @Param('projectId', ParseIntPipe) id: number,
     @Body() dto: AddMemberDto,
@@ -91,12 +92,22 @@ export class ProjectController {
 
   @RemoveProjectMemberDocs()
   @MutationLimit()
-  @ProjectRoles(['owner'])
+  @ProjectRoles(['owner', 'admin'])
   @Delete(':projectId/members')
   async removeProjectMember(
     @Param('projectId', ParseIntPipe) id: number,
     @Body() dto: RemoveMemberDto,
   ) {
     return await this.projectService.removeProjectMember(id, dto);
+  }
+
+  @MutationLimit()
+  @ProjectRoles(['owner', 'admin'])
+  @Patch(':projectId/members')
+  async updateProjectMemberStatus(
+    @Param('projectId', ParseIntPipe) id: number,
+    @Body() dto: ChangeMemberDto,
+  ) {
+    return await this.projectService.updateProjectMemberStatus(id, dto);
   }
 }
