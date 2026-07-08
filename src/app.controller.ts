@@ -1,6 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
-import type { HealthCheckResponse } from './app.service';
+import type {
+  DatabaseHealthCheckResponse,
+  HealthCheckResponse,
+} from './app.service';
 import { AppRootDocs } from './common/decorators/swagger/app-docs.decorator';
 
 @Controller()
@@ -11,5 +14,10 @@ export class AppController {
   @Get()
   getHealth(): HealthCheckResponse {
     return this.appService.getHealth();
+  }
+
+  @Get('health/db')
+  async getDatabaseHealth(): Promise<DatabaseHealthCheckResponse> {
+    return await this.appService.getDatabaseHealth();
   }
 }
