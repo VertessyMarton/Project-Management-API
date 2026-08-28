@@ -1,3 +1,4 @@
+import type { ProjectQueryDto } from './dto/project-query.dto';
 import { ProjectRoleEnum } from './enums/project-role.enum';
 import { ProjectController } from './project.controller';
 
@@ -38,12 +39,13 @@ describe('ProjectController', () => {
 
   it('lists only projects for the request user', async () => {
     const projects = [{ id: 10 }];
+    const query = {} as ProjectQueryDto;
     projectService.getAllProject.mockResolvedValue(projects);
 
-    await expect(controller.getAllProject({ user: { id: 1 } })).resolves.toBe(
-      projects,
-    );
-    expect(projectService.getAllProject).toHaveBeenCalledWith(1);
+    await expect(
+      controller.getAllProject({ user: { id: 1 } }, query),
+    ).resolves.toBe(projects);
+    expect(projectService.getAllProject).toHaveBeenCalledWith(1, query);
   });
 
   it('adds a member to the selected project', async () => {

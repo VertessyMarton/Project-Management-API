@@ -9,6 +9,7 @@ import {
   UseGuards,
   Request,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -33,6 +34,7 @@ import {
 } from 'src/common/decorators/rate-limit.decorator';
 import { RemoveMemberDto } from './dto/remove-member.dto';
 import { ChangeMemberDto } from './dto/change-member.dto';
+import { ProjectQueryDto } from './dto/project-query.dto';
 
 @UseGuards(JwtAuthGuard, ProjectRolesGuard)
 @Controller('projects')
@@ -57,8 +59,8 @@ export class ProjectController {
   @GetAllProjectDocs()
   @ReadLimit()
   @Get()
-  async getAllProject(@Request() req) {
-    return await this.projectService.getAllProject(req.user.id);
+  async getAllProject(@Request() req, @Query() query: ProjectQueryDto) {
+    return await this.projectService.getAllProject(req.user.id, query);
   }
 
   @RemoveProjectDocs()

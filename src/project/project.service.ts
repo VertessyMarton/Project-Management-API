@@ -8,13 +8,14 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Project } from './entities/project.entity';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 import { ProjectMembers } from './entities/project-members.entity';
 import { ProjectRoleEnum } from './enums/project-role.enum';
 import { User } from 'src/user/entities/user.entity';
 import { AddMemberDto } from './dto/add-member.dto';
 import { RemoveMemberDto } from './dto/remove-member.dto';
 import { ChangeMemberDto } from './dto/change-member.dto';
+import { ProjectQueryDto } from './dto/project-query.dto';
 
 @Injectable()
 export class ProjectService {
@@ -55,14 +56,42 @@ export class ProjectService {
     return project;
   }
 
-  async getAllProject(userId: number) {
-    return await this.projectRepository.find({
-      where: {
-        projectMembers: {
-          userId,
-        },
+  async getAllProject(
+    userId: number,
+    query: ProjectQueryDto = new ProjectQueryDto(),
+  ) {
+    const normalizedQuery = Object.assign(new ProjectQueryDto(), query);
+    const { page, limit, name, sortBy, sortOrder } = normalizedQuery;
+
+    const where: FindOptionsWhere<Project> = {
+      projectMembers: {
+        userId,
       },
+    };
+
+    if (name !== undefined) {
+      where.name = ILike(`%${name.trim()}%`);
+    }
+
+    const [projects, total] = await this.projectRepository.findAndCount({
+      where,
+      order: {
+        [sortBy]: sortOrder,
+        id: sortOrder,
+      },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+
+    return {
+      data: projects,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async removeProject(projectId: number) {
