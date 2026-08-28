@@ -7,6 +7,7 @@ import {
   Param,
   ParseIntPipe,
   Patch,
+  Query,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -21,6 +22,7 @@ import {
   AdminFindOneUserDocs,
   AdminSetUserRoleDocs,
 } from 'src/common/decorators/swagger/admin-user-docs.decorator';
+import { AdminUserQueryDto } from '../dto/admin.user-query.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(ClassSerializerInterceptor)
@@ -31,8 +33,8 @@ export class AdminUserController {
   @AdminFindAllUsersDocs()
   @Roles('admin')
   @Get()
-  async findAllUsers() {
-    return this.adminService.findAllUser();
+  async findAllUsers(@Query() query: AdminUserQueryDto) {
+    return this.adminService.findAllUser(query);
   }
 
   @AdminFindOneUserDocs()

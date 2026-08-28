@@ -4,8 +4,10 @@ import { Comment } from 'src/comment/entities/comment.entity';
 import { Project } from 'src/project/entities/project.entity';
 import { Task } from 'src/task/entities/task.entity';
 import { User } from 'src/user/entities/user.entity';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
+import { AdminUserQueryDto } from './dto/admin.user-query.dto';
+import { AdminProjectQueryDto } from './dto/admin.project-query.dto';
 
 @Injectable()
 export class AdminService {
@@ -16,12 +18,46 @@ export class AdminService {
     @InjectRepository(Comment) private commentRepository: Repository<Comment>,
   ) {}
 
-  async findAllUser() {
-    const users = await this.userRepository.find();
-    if (!users) {
-      throw new NotFoundException('User not found');
+  async findAllUser(query: AdminUserQueryDto = new AdminUserQueryDto()) {
+    const normalizedQuery = Object.assign(new AdminUserQueryDto(), query);
+    const { page, limit, role, status, q, sortBy, sortOrder } = normalizedQuery;
+    const term = q?.trim();
+
+    const baseWhere: FindOptionsWhere<User> = {};
+
+    if (role !== undefined) {
+      baseWhere.role = role;
     }
-    return users;
+    if (status !== undefined) {
+      baseWhere.status = status;
+    }
+
+    const where: FindOptionsWhere<User>[] | FindOptionsWhere<User> = term
+      ? [
+          { ...baseWhere, name: ILike(`%${term}%`) },
+          { ...baseWhere, email: ILike(`%${term}%`) },
+        ]
+      : baseWhere;
+
+    const [users, total] = await this.userRepository.findAndCount({
+      where,
+      order: {
+        [sortBy]: sortOrder,
+        id: sortOrder,
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return {
+      data: users,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOneUser(userId: number) {
