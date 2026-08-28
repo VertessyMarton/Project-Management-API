@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AdminService } from '../admin.service';
@@ -15,6 +16,7 @@ import {
   AdminFindAllProjectDocs,
   AdminFindOneProjectDocs,
 } from 'src/common/decorators/swagger/admin-project-docs.decorator';
+import { AdminProjectQueryDto } from '../dto/admin.project-query.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('admin')
@@ -24,7 +26,7 @@ export class AdminProjectController {
   @AdminFindAllProjectDocs()
   @Roles('admin')
   @Get('projects')
-  async findAllProject() {
+  async findAllProject(@Query() query: AdminProjectQueryDto) {
     return this.adminService.findAllProject();
   }
 
