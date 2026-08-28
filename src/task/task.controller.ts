@@ -9,6 +9,7 @@ import {
   Request,
   UseGuards,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -27,6 +28,7 @@ import {
   MutationLimit,
   ReadLimit,
 } from 'src/common/decorators/rate-limit.decorator';
+import { TaskQueryDto } from './dto/task-query.dto';
 
 @UseGuards(JwtAuthGuard, ProjectRolesGuard)
 @Controller('projects')
@@ -49,8 +51,11 @@ export class TaskController {
   @ProjectRoles(['owner', 'member', 'viewer'])
   @ReadLimit()
   @Get(':projectId/tasks')
-  findAllTask(@Param('projectId', ParseIntPipe) projectId: number) {
-    return this.taskService.findAllTask(projectId);
+  findAllTask(
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Query() query: TaskQueryDto,
+  ) {
+    return this.taskService.findAllTasks(projectId, query);
   }
 
   @FindOneTaskDocs()

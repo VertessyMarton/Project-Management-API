@@ -7,8 +7,9 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from './entities/task.entity';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
+import { TaskQueryDto } from './dto/task-query.dto';
 
 @Injectable()
 export class TaskService {
@@ -40,15 +41,61 @@ export class TaskService {
     });
   }
 
-  async findAllTask(projectId: number) {
-    const tasks = await this.taskRepository.find({
-      where: { projectId },
+  async findAllTasks(
+    projectId: number,
+    query: TaskQueryDto = new TaskQueryDto(),
+  ) {
+    const normalizedQuery = Object.assign(new TaskQueryDto(), query);
+    const {
+      page,
+      limit,
+      status,
+      title,
+      assigneeId,
+      createdById,
+      sortBy,
+      sortOrder,
+    } = normalizedQuery;
+
+    const where: FindOptionsWhere<Task> = {
+      projectId,
+    };
+
+    if (status !== undefined) {
+      where.status = status;
+    }
+
+    if (title !== undefined) {
+      where.title = ILike(`%${title.trim()}%`);
+    }
+
+    if (assigneeId !== undefined) {
+      where.assigneeId = assigneeId;
+    }
+
+    if (createdById !== undefined) {
+      where.createdById = createdById;
+    }
+
+    const [tasks, total] = await this.taskRepository.findAndCount({
+      where,
+      order: {
+        [sortBy]: sortOrder,
+        id: sortOrder,
+      },
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
-    if (tasks.length === 0) {
-      throw new NotFoundException('Resource not found');
-    }
-    return tasks;
+    return {
+      data: tasks,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOneTask(projectId: number, taskId: number) {

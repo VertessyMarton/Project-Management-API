@@ -11,7 +11,7 @@ describe('TaskService', () => {
   let taskRepository: {
     save: jest.Mock;
     findOne: jest.Mock;
-    find: jest.Mock;
+    findAndCount: jest.Mock;
     update: jest.Mock;
     delete: jest.Mock;
   };
@@ -24,7 +24,7 @@ describe('TaskService', () => {
     taskRepository = {
       save: jest.fn(),
       findOne: jest.fn(),
-      find: jest.fn(),
+      findAndCount: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
     };
@@ -60,12 +60,18 @@ describe('TaskService', () => {
     });
   });
 
-  it('throws when no tasks exist for a project', async () => {
-    taskRepository.find.mockResolvedValue([]);
+  it('returns an empty page when no tasks exist for a project', async () => {
+    taskRepository.findAndCount.mockResolvedValue([[], 0]);
 
-    await expect(service.findAllTask(10)).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(service.findAllTasks(10)).resolves.toEqual({
+      data: [],
+      meta: {
+        page: 1,
+        limit: 25,
+        total: 0,
+        totalPages: 0,
+      },
+    });
   });
 
   it('rejects empty task updates', async () => {
