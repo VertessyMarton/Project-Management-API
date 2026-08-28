@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { OtpEnum } from '../otp/enums/otp.enum';
 import { UserRoleEnum } from '../user/enums/user-role.enum';
 import { AuthService } from './auth.service';
+import { UserStatusEnum } from 'src/user/enums/user-status.enum';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -109,7 +110,7 @@ describe('AuthService', () => {
         id: 1,
         email: 'test@example.com',
         role: UserRoleEnum.USER,
-        status: 'unverified',
+        status: UserStatusEnum.UNVERIFIED,
       }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
@@ -119,7 +120,7 @@ describe('AuthService', () => {
       id: 1,
       email: 'test@example.com',
       role: UserRoleEnum.USER,
-      status: 'verified' as const,
+      status: UserStatusEnum.VERIFIED,
     };
     jwtService.sign.mockReturnValue('access-token');
     refreshService.createRefreshToken.mockResolvedValue('refresh-token');

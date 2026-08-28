@@ -13,6 +13,7 @@ import {
   findRefreshCookie,
   toCookieArray,
 } from './helpers/auth.helper';
+import { UserStatusEnum } from 'src/user/enums/user-status.enum';
 
 let userRepository: Repository<User>;
 
@@ -110,7 +111,10 @@ describe('Auth (e2e)', () => {
       .send(user)
       .expect(201);
 
-    await userRepository.update({ email: user.email }, { status: 'verified' });
+    await userRepository.update(
+      { email: user.email },
+      { status: UserStatusEnum.VERIFIED },
+    );
 
     const response = await request(app.getHttpServer())
       .post('/auth/login')
@@ -143,7 +147,10 @@ describe('Auth (e2e)', () => {
       .send(user)
       .expect(201);
 
-    await userRepository.update({ email: user.email }, { status: 'verified' });
+    await userRepository.update(
+      { email: user.email },
+      { status: UserStatusEnum.VERIFIED },
+    );
 
     const loginResponse = await request(app.getHttpServer())
       .post('/auth/login')

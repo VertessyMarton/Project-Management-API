@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { createUserDto } from './user.helper';
 import { UserRoleEnum } from 'src/user/enums/user-role.enum';
+import { UserStatusEnum } from 'src/user/enums/user-status.enum';
 
 export type CookieHeader = string | string[] | undefined;
 
@@ -26,7 +27,10 @@ export const registerVerifiedUser = async (
     .send(user)
     .expect(201);
 
-  await userRepository.update({ email: user.email }, { status: 'verified' });
+  await userRepository.update(
+    { email: user.email },
+    { status: UserStatusEnum.VERIFIED },
+  );
 
   return response.body;
 };

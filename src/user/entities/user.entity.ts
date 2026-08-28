@@ -16,6 +16,7 @@ import { Task } from 'src/task/entities/task.entity';
 import { Comment } from 'src/comment/entities/comment.entity';
 import { RefreshToken } from 'src/auth/entities/refresh-token.entity';
 import { OauthAccount } from 'src/auth/entities/oauth-account.entity';
+import { UserStatusEnum } from '../enums/user-status.enum';
 
 @Entity()
 export class User {
@@ -56,8 +57,12 @@ export class User {
   @Column({ default: UserRoleEnum.USER, type: 'enum', enum: UserRoleEnum })
   role: UserRoleEnum;
 
-  @Column({ default: 'unverified' })
-  status: 'verified' | 'unverified';
+  @Column({
+    default: UserStatusEnum.UNVERIFIED,
+    type: 'enum',
+    enum: UserStatusEnum,
+  })
+  status: UserStatusEnum;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

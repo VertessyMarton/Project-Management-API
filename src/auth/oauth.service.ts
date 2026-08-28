@@ -5,6 +5,7 @@ import { OauthAccount } from './entities/oauth-account.entity';
 import { Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { OAuthProvider } from './enums/oauth-provider.enum';
+import { UserStatusEnum } from 'src/user/enums/user-status.enum';
 
 @Injectable()
 export class OAuthService {
@@ -64,7 +65,7 @@ export class OAuthService {
     const user = await this.userRepository.save({
       name,
       email,
-      status: 'verified',
+      status: UserStatusEnum.VERIFIED,
     });
     await this.linkOAuthAccountToUser(provider, providerUserId, email, user.id);
 

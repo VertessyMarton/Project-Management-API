@@ -21,6 +21,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { randomUUID } from 'crypto';
 import { RefreshToken } from 'src/auth/entities/refresh-token.entity';
 import { RefreshTokenEnum } from 'src/auth/enums/refresh-token.enum';
+import { UserStatusEnum } from 'src/user/enums/user-status.enum';
 
 @Injectable()
 export class OtpService {
@@ -85,11 +86,13 @@ export class OtpService {
       throw new BadRequestException(message);
     }
 
-    if (user.status === 'verified') {
+    if (user.status === UserStatusEnum.VERIFIED) {
       throw new BadRequestException(message);
-    } else if (user.status === 'unverified') {
+    } else if (user.status === UserStatusEnum.UNVERIFIED) {
       await this.validateOtp(user.id, dto.otp, OtpEnum.OTP);
-      await this.userRepository.update(user.id, { status: 'verified' });
+      await this.userRepository.update(user.id, {
+        status: UserStatusEnum.VERIFIED,
+      });
       await this.otpRepository.delete({ user: { id: user.id } });
       return { message: 'Email verified successfully' };
     }
@@ -116,7 +119,7 @@ export class OtpService {
       return { message };
     }
 
-    if (user.status === 'unverified') {
+    if (user.status === UserStatusEnum.UNVERIFIED) {
       await this.otpRepository.delete({ user: { id: user.id } });
       const otp = await this.generateOtp(user, OtpEnum.OTP);
 
