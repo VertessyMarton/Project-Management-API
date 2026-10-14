@@ -4,7 +4,13 @@ import { Comment } from 'src/comment/entities/comment.entity';
 import { Project } from 'src/project/entities/project.entity';
 import { Task } from 'src/task/entities/task.entity';
 import { User } from 'src/user/entities/user.entity';
-import { FindOptionsWhere, ILike, Repository } from 'typeorm';
+import {
+  FindOptionsWhere,
+  ILike,
+  Repository,
+  QueryBuilder,
+  Brackets,
+} from 'typeorm';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { AdminUserQueryDto } from './dto/admin.user-query.dto';
 import { AdminProjectQueryDto } from './dto/admin.project-query.dto';
@@ -84,12 +90,85 @@ export class AdminService {
     return { message: 'user deleted' };
   }
 
-  async findAllProject() {
-    const projects = await this.projectRepository.find();
-    if (!projects) {
-      throw new NotFoundException('Project not found');
+  async findAllProject(
+    query: AdminProjectQueryDto = new AdminProjectQueryDto(),
+  ) {
+    const normalizedQuery = Object.assign(new AdminProjectQueryDto(), query);
+
+    const {
+      page,
+      limit,
+      q,
+      memberId,
+      createdFrom,
+      createdTo,
+      sortBy,
+      sortOrder,
+    } = normalizedQuery;
+
+    const qb = this.projectRepository.createQueryBuilder('project');
+
+    const term = q?.trim();
+
+    if (term) {
+      qb.andWhere(
+        new Brackets((searchQb) => {
+          searchQb
+            .where('project.name ILIKE :term', {
+              term: `%${term}%`,
+            })
+            .orWhere('project.description ILIKE :term', {
+              term: `%${term}%`,
+            });
+        }),
+      );
     }
-    return projects;
+
+    if (memberId !== undefined) {
+      qb.innerJoin(
+        'project.projectMembers',
+        'member',
+        'member.userId = :memberId',
+        { memberId },
+      );
+    }
+
+    if (createdFrom) {
+      qb.andWhere('project.createdAt >= :createdFrom', {
+        createdFrom: new Date(createdFrom),
+      });
+    }
+
+    if (createdTo) {
+      const createdToExclusive = new Date(createdTo);
+
+      if (!createdTo.includes('T')) {
+        createdToExclusive.setUTCDate(createdToExclusive.getUTCDate() + 1);
+      }
+
+      qb.andWhere('project.createdAt < :createdTo', {
+        createdTo: createdToExclusive,
+      });
+    }
+
+    const direction = sortOrder.toUpperCase() as 'ASC' | 'DESC';
+
+    qb.orderBy(`project.${sortBy}`, direction)
+      .addOrderBy('project.id', direction)
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [projects, total] = await qb.getManyAndCount();
+
+    return {
+      data: projects,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOneProject(projectId: number) {

@@ -27,7 +27,7 @@ export class AdminProjectController {
   @Roles('admin')
   @Get('projects')
   async findAllProject(@Query() query: AdminProjectQueryDto) {
-    return this.adminService.findAllProject();
+    return this.adminService.findAllProject(query);
   }
 
   @AdminFindOneProjectDocs()

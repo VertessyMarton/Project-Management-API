@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsDateString,
   IsEnum,
   IsInt,
   IsOptional,
@@ -35,8 +36,8 @@ export class AdminProjectQueryDto {
   limit = 25;
 
   @IsOptional()
+  @Type(() => String)
   @IsString()
-  @MaxLength(100)
   q?: string;
 
   @IsOptional()
@@ -44,6 +45,14 @@ export class AdminProjectQueryDto {
   @IsInt()
   @Min(1)
   memberId?: number;
+
+  @IsOptional()
+  @IsDateString()
+  createdFrom?: string;
+
+  @IsOptional()
+  @IsDateString()
+  createdTo?: string;
 
   @IsOptional()
   @IsEnum(AdminProjectSortField)
