@@ -4,16 +4,13 @@ import { Comment } from 'src/comment/entities/comment.entity';
 import { Project } from 'src/project/entities/project.entity';
 import { Task } from 'src/task/entities/task.entity';
 import { User } from 'src/user/entities/user.entity';
-import {
-  FindOptionsWhere,
-  ILike,
-  Repository,
-  QueryBuilder,
-  Brackets,
-} from 'typeorm';
+import { FindOptionsWhere, ILike, Repository, Brackets } from 'typeorm';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { AdminUserQueryDto } from './dto/admin.user-query.dto';
 import { AdminProjectQueryDto } from './dto/admin.project-query.dto';
+import { AdminTaskQueryDto } from './dto/admin.task-query.dto';
+import { TaskStatusEnum } from 'src/task/enums/task-status.enum';
+import { AdminCommentQueryDto } from './dto/admin.comment-query.dto';
 
 @Injectable()
 export class AdminService {
@@ -23,6 +20,16 @@ export class AdminService {
     @InjectRepository(Task) private taskRepository: Repository<Task>,
     @InjectRepository(Comment) private commentRepository: Repository<Comment>,
   ) {}
+
+  private getExclusiveUpperDate(value: string): Date {
+    const date = new Date(value);
+
+    if (!value.includes('T')) {
+      date.setUTCDate(date.getUTCDate() + 1);
+    }
+
+    return date;
+  }
 
   async findAllUser(query: AdminUserQueryDto = new AdminUserQueryDto()) {
     const normalizedQuery = Object.assign(new AdminUserQueryDto(), query);
@@ -140,11 +147,7 @@ export class AdminService {
     }
 
     if (createdTo) {
-      const createdToExclusive = new Date(createdTo);
-
-      if (!createdTo.includes('T')) {
-        createdToExclusive.setUTCDate(createdToExclusive.getUTCDate() + 1);
-      }
+      const createdToExclusive = this.getExclusiveUpperDate(createdTo);
 
       qb.andWhere('project.createdAt < :createdTo', {
         createdTo: createdToExclusive,
@@ -189,12 +192,173 @@ export class AdminService {
     return { message: 'Project deleted' };
   }
 
-  async findAllTask() {
-    const tasks = await this.taskRepository.find();
-    if (!tasks) {
-      throw new NotFoundException('Task not found');
+  async findAllTask(query: AdminTaskQueryDto = new AdminTaskQueryDto()) {
+    const normalizedQuery = Object.assign(new AdminTaskQueryDto(), query);
+    const {
+      page,
+      limit,
+      projectId,
+      status,
+      assigneeId,
+      createdById,
+      hasAssignee,
+      overdue,
+      q,
+      createdFrom,
+      createdTo,
+      dueFrom,
+      dueTo,
+      sortBy,
+      sortOrder,
+    } = normalizedQuery;
+    const term = q?.trim();
+
+    const qb = this.taskRepository
+      .createQueryBuilder('task')
+      .leftJoin('task.project', 'project')
+      .leftJoin('task.assignee', 'assignee')
+      .leftJoin('task.createdBy', 'createdBy')
+      .addSelect([
+        'project.id',
+        'project.name',
+        'assignee.id',
+        'assignee.name',
+        'assignee.email',
+        'createdBy.id',
+        'createdBy.name',
+      ]);
+
+    if (term) {
+      qb.andWhere(
+        new Brackets((searchQb) => {
+          searchQb
+            .where('task.title ILIKE :term', {
+              term: `%${term}%`,
+            })
+            .orWhere('task.description ILIKE :term', {
+              term: `%${term}%`,
+            });
+        }),
+      );
     }
-    return tasks;
+
+    if (projectId !== undefined) {
+      qb.andWhere('task.projectId = :projectId', { projectId });
+    }
+
+    if (status !== undefined) {
+      qb.andWhere('task.status = :status', { status });
+    }
+
+    if (assigneeId !== undefined) {
+      qb.andWhere('task.assigneeId = :assigneeId', { assigneeId });
+    }
+
+    if (createdById !== undefined) {
+      qb.andWhere('task.createdById = :createdById', { createdById });
+    }
+
+    if (hasAssignee === true) {
+      qb.andWhere('task.assigneeId IS NOT NULL');
+    }
+
+    if (hasAssignee === false) {
+      qb.andWhere('task.assigneeId IS NULL');
+    }
+
+    if (overdue === true) {
+      qb.andWhere('task.dueDate < CURRENT_TIMESTAMP');
+      qb.andWhere('task.status != :completedStatus', {
+        completedStatus: TaskStatusEnum.DONE,
+      });
+    }
+
+    if (overdue === false) {
+      qb.andWhere(
+        new Brackets((notOverdueQb) => {
+          notOverdueQb
+            .where('task.dueDate IS NULL')
+            .orWhere('task.dueDate >= CURRENT_TIMESTAMP')
+            .orWhere('task.status = :doneStatus', {
+              doneStatus: TaskStatusEnum.DONE,
+            });
+        }),
+      );
+    }
+
+    if (dueFrom) {
+      qb.andWhere('task.dueDate >= :dueFrom', {
+        dueFrom: new Date(dueFrom),
+      });
+    }
+
+    if (dueTo) {
+      const dueToExclusive = this.getExclusiveUpperDate(dueTo);
+
+      qb.andWhere('task.dueDate < :dueTo', {
+        dueTo: dueToExclusive,
+      });
+    }
+
+    if (createdFrom) {
+      qb.andWhere('task.createdAt >= :createdFrom', {
+        createdFrom: new Date(createdFrom),
+      });
+    }
+
+    if (createdTo) {
+      const createdToExclusive = this.getExclusiveUpperDate(createdTo);
+
+      qb.andWhere('task.createdAt < :createdTo', {
+        createdTo: createdToExclusive,
+      });
+    }
+
+    const direction = sortOrder.toUpperCase() as 'ASC' | 'DESC';
+
+    qb.orderBy(`task.${sortBy}`, direction)
+      .addOrderBy('task.id', direction)
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [tasks, total] = await qb.getManyAndCount();
+
+    const data = tasks.map((task) => ({
+      id: task.id,
+      title: task.title,
+      status: task.status,
+      dueDate: task.dueDate,
+
+      project: {
+        id: task.project.id,
+        name: task.project.name,
+      },
+
+      assignee: task.assignee
+        ? {
+            id: task.assignee?.id,
+            name: task.assignee?.name,
+            email: task.assignee?.email,
+          }
+        : null,
+
+      createdBy: task.createdBy
+        ? {
+            id: task.createdBy.id,
+            name: task.createdBy.name,
+          }
+        : null,
+    }));
+
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOneTask(taskId: number) {
@@ -213,12 +377,118 @@ export class AdminService {
     return { message: 'Task deleted' };
   }
 
-  async findAllComment() {
-    const comments = await this.commentRepository.find();
-    if (!comments) {
-      throw new NotFoundException('Comment not found');
+  async findAllComment(
+    query: AdminCommentQueryDto = new AdminCommentQueryDto(),
+  ) {
+    const normalizedQuery = Object.assign(new AdminCommentQueryDto(), query);
+
+    const {
+      page,
+      limit,
+      q,
+      projectId,
+      taskId,
+      authorId,
+      createdFrom,
+      createdTo,
+      sortBy,
+      sortOrder,
+    } = normalizedQuery;
+
+    const term = q?.trim();
+
+    const qb = this.commentRepository
+      .createQueryBuilder('comment')
+      .innerJoin('comment.task', 'task')
+      .innerJoin('task.project', 'project')
+      .leftJoin('comment.author', 'author')
+      .addSelect([
+        'task.id',
+        'task.title',
+        'project.id',
+        'project.name',
+        'author.id',
+        'author.name',
+        'author.email',
+      ]);
+
+    if (term) {
+      qb.andWhere(
+        new Brackets((searchQb) => {
+          searchQb.where('comment.content ILIKE :term', {
+            term: `%${term}%`,
+          });
+        }),
+      );
     }
-    return comments;
+
+    if (projectId !== undefined) {
+      qb.andWhere('task.projectId = :projectId', { projectId });
+    }
+
+    if (taskId !== undefined) {
+      qb.andWhere('comment.taskId = :taskId', { taskId });
+    }
+
+    if (authorId !== undefined) {
+      qb.andWhere('comment.authorId = :authorId', { authorId });
+    }
+
+    if (createdFrom) {
+      qb.andWhere('comment.createdAt >= :createdFrom', {
+        createdFrom: new Date(createdFrom),
+      });
+    }
+
+    if (createdTo) {
+      const createdToExclusive = this.getExclusiveUpperDate(createdTo);
+
+      qb.andWhere('comment.createdAt < :createdTo', {
+        createdTo: createdToExclusive,
+      });
+    }
+
+    const direction = sortOrder.toUpperCase() as 'ASC' | 'DESC';
+
+    qb.orderBy(`comment.${sortBy}`, direction)
+      .addOrderBy('comment.id', direction)
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [comments, total] = await qb.getManyAndCount();
+
+    const data = comments.map((comment) => ({
+      id: comment.id,
+      content: comment.content,
+      createdAt: comment.createdAt,
+      updatedAt: comment.updatedAt,
+
+      author: {
+        id: comment.author.id,
+        name: comment.author.name,
+        email: comment.author.email,
+      },
+
+      task: {
+        id: comment.task.id,
+        title: comment.task.title,
+      },
+
+      project: {
+        id: comment.task.project.id,
+        name: comment.task.project.name,
+      },
+    }));
+
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async deleteComment(commentId: number) {

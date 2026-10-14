@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AdminService } from '../admin.service';
@@ -14,6 +15,7 @@ import {
   AdminDeleteCommentDocs,
   AdminFindAllCommentDocs,
 } from 'src/common/decorators/swagger/admin-comment-docs.decorator';
+import { AdminCommentQueryDto } from '../dto/admin.comment-query.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('admin')
@@ -23,8 +25,8 @@ export class AdminCommentController {
   @AdminFindAllCommentDocs()
   @Roles('admin')
   @Get('comments')
-  async findAllComment() {
-    return this.adminService.findAllComment();
+  async findAllComment(@Query() query: AdminCommentQueryDto) {
+    return this.adminService.findAllComment(query);
   }
 
   @AdminDeleteCommentDocs()

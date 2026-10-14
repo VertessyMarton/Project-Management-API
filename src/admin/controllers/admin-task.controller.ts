@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AdminService } from '../admin.service';
@@ -15,6 +16,7 @@ import {
   AdminFindAllTaskDocs,
   AdminFindOneTaskDocs,
 } from 'src/common/decorators/swagger/admin-task-docs.decorator';
+import { AdminTaskQueryDto } from '../dto/admin.task-query.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('admin')
@@ -24,8 +26,8 @@ export class AdminTaskController {
   @AdminFindAllTaskDocs()
   @Roles('admin')
   @Get('tasks')
-  async findAllTask() {
-    return this.adminService.findAllTask();
+  async findAllTask(@Query() query: AdminTaskQueryDto) {
+    return this.adminService.findAllTask(query);
   }
 
   @AdminFindOneTaskDocs()
