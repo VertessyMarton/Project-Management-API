@@ -7,6 +7,7 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiParam,
+  ApiQuery,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
@@ -61,6 +62,25 @@ export function IdParam(name: string, description: string) {
     example: 1,
     description,
   });
+}
+
+export function PaginationQueryDocs(defaultLimit = 25) {
+  return applyDecorators(
+    ApiQuery({
+      name: 'page',
+      required: false,
+      type: Number,
+      example: 1,
+      description: 'Page number, starting from 1',
+    }),
+    ApiQuery({
+      name: 'limit',
+      required: false,
+      type: Number,
+      example: defaultLimit,
+      description: 'Number of results per page. Maximum: 100',
+    }),
+  );
 }
 
 export function JwtUnauthorizedResponse() {

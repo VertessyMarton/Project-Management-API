@@ -42,3 +42,55 @@ export const commentExample = {
   createdAt: '2026-04-25T10:30:00.000Z',
   updatedAt: '2026-04-25T10:30:00.000Z',
 };
+
+export const adminTaskExample = {
+  id: 1,
+  title: 'Prepare release notes',
+  status: 'todo',
+  dueDate: '2026-05-01T10:30:00.000Z',
+  project: {
+    id: 1,
+    name: 'Website redesign',
+  },
+  assignee: {
+    id: 2,
+    name: 'Task Assignee',
+    email: 'assignee@example.com',
+  },
+  createdBy: {
+    id: 1,
+    name: 'Test User',
+  },
+};
+
+export const adminCommentExample = {
+  id: 1,
+  content: 'Looks ready to ship.',
+  createdAt: '2026-04-25T10:30:00.000Z',
+  updatedAt: '2026-04-25T10:30:00.000Z',
+  author: {
+    id: 1,
+    name: 'Test User',
+    email: 'testemail@example.com',
+  },
+  task: {
+    id: 1,
+    title: 'Prepare release notes',
+  },
+  project: {
+    id: 1,
+    name: 'Website redesign',
+  },
+};
+
+export function paginatedExample(data: unknown[], limit = 25) {
+  return {
+    data,
+    meta: {
+      page: 1,
+      limit,
+      total: data.length,
+      totalPages: data.length === 0 ? 0 : 1,
+    },
+  };
+}

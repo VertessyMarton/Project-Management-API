@@ -1,9 +1,10 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiBody, ApiOperation } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiQuery } from '@nestjs/swagger';
 
 import { AddMemberDto } from 'src/project/dto/add-member.dto';
 import { ChangeMemberDto } from 'src/project/dto/change-member.dto';
 import { CreateProjectDto } from 'src/project/dto/create-project.dto';
+import { ProjectSortField, SortOrder } from 'src/project/dto/project-query.dto';
 import { UpdateProjectDto } from 'src/project/dto/update-project.dto';
 import {
   BadRequestResponse,
@@ -13,8 +14,13 @@ import {
   IdParam,
   NotFoundResponse,
   OkResponse,
+  PaginationQueryDocs,
 } from './swagger-docs.helpers';
-import { projectExample, projectMemberExample } from './swagger-examples';
+import {
+  paginatedExample,
+  projectExample,
+  projectMemberExample,
+} from './swagger-examples';
 import { RemoveMemberDto } from 'src/project/dto/remove-member.dto';
 
 const projectIdParam = IdParam('projectId', 'Project id');
@@ -61,9 +67,43 @@ export function GetProjectDocs() {
 
 export function GetAllProjectDocs() {
   return applyDecorators(
-    ApiOperation({ summary: 'Get authenticated user projects' }),
+    ApiOperation({
+      summary: 'List authenticated user projects',
+      description:
+        'Returns a paginated list of projects that contain the authenticated user as a member.',
+    }),
     BearerAuthDocs(),
-    OkResponse('Projects returned', [projectExample]),
+    PaginationQueryDocs(10),
+    ApiQuery({
+      name: 'name',
+      required: false,
+      type: String,
+      example: 'website',
+      description: 'Case-insensitive partial project-name filter',
+    }),
+    ApiQuery({
+      name: 'sortBy',
+      required: false,
+      enum: ProjectSortField,
+      example: ProjectSortField.CREATED_AT,
+      description: 'Field used to sort the projects',
+    }),
+    ApiQuery({
+      name: 'sortOrder',
+      required: false,
+      enum: SortOrder,
+      example: SortOrder.DESC,
+      description: 'Sort direction',
+    }),
+    OkResponse(
+      'Paginated projects returned',
+      paginatedExample([projectExample], 10),
+    ),
+    BadRequestResponse('Thrown when query parameters fail validation', {
+      message: ['limit must not be greater than 100'],
+      error: 'Bad Request',
+      statusCode: 400,
+    }),
   );
 }
 

@@ -1,13 +1,19 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery } from '@nestjs/swagger';
 
 import {
+  AdminProjectSortField,
+  SortOrder,
+} from 'src/admin/dto/admin.project-query.dto';
+import {
   AdminAuthDocs,
+  BadRequestResponse,
   IdParam,
   NotFoundResponse,
   OkResponse,
+  PaginationQueryDocs,
 } from './swagger-docs.helpers';
-import { projectExample } from './swagger-examples';
+import { paginatedExample, projectExample } from './swagger-examples';
 
 const projectIdParam = IdParam('projectId', 'Project id');
 const projectNotFound = NotFoundResponse(
@@ -21,13 +27,66 @@ const projectNotFound = NotFoundResponse(
 
 export function AdminFindAllProjectDocs() {
   return applyDecorators(
-    ApiOperation({ summary: 'Admin get all projects' }),
+    ApiOperation({
+      summary: 'Admin list projects',
+      description:
+        'Returns a paginated list of projects with optional searching, filtering, and sorting.',
+    }),
     AdminAuthDocs(),
-    OkResponse('Projects returned', [projectExample]),
-    NotFoundResponse('Thrown when no projects can be found', {
-      message: 'Project not found',
-      error: 'Not Found',
-      statusCode: 404,
+    PaginationQueryDocs(),
+    ApiQuery({
+      name: 'q',
+      required: false,
+      type: String,
+      example: 'website',
+      description:
+        'Case-insensitive search across project name and description',
+    }),
+    ApiQuery({
+      name: 'memberId',
+      required: false,
+      type: Number,
+      example: 2,
+      description: 'Return only projects containing this user as a member',
+    }),
+    ApiQuery({
+      name: 'createdFrom',
+      required: false,
+      type: String,
+      example: '2026-04-01',
+      description:
+        'Return projects created on or after this ISO date or timestamp',
+    }),
+    ApiQuery({
+      name: 'createdTo',
+      required: false,
+      type: String,
+      example: '2026-04-30',
+      description:
+        'Return projects created through this ISO date or timestamp. A date-only value includes the entire day',
+    }),
+    ApiQuery({
+      name: 'sortBy',
+      required: false,
+      enum: AdminProjectSortField,
+      example: AdminProjectSortField.CREATED_AT,
+      description: 'Field used to sort the projects',
+    }),
+    ApiQuery({
+      name: 'sortOrder',
+      required: false,
+      enum: SortOrder,
+      example: SortOrder.DESC,
+      description: 'Sort direction',
+    }),
+    OkResponse(
+      'Paginated projects returned',
+      paginatedExample([projectExample]),
+    ),
+    BadRequestResponse('Thrown when query parameters fail validation', {
+      message: ['createdFrom must be a valid ISO 8601 date string'],
+      error: 'Bad Request',
+      statusCode: 400,
     }),
   );
 }
