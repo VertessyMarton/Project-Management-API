@@ -11,7 +11,6 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { AdminService } from '../admin.service';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
@@ -23,12 +22,13 @@ import {
   AdminSetUserRoleDocs,
 } from 'src/common/decorators/swagger/admin-user-docs.decorator';
 import { AdminUserQueryDto } from '../dto/admin.user-query.dto';
+import { AdminUserService } from '../services/admin-user.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('admin/users')
 export class AdminUserController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(private readonly adminService: AdminUserService) {}
 
   @AdminFindAllUsersDocs()
   @Roles('admin')

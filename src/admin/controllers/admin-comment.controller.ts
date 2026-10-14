@@ -7,7 +7,6 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { AdminService } from '../admin.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -16,11 +15,12 @@ import {
   AdminFindAllCommentDocs,
 } from 'src/common/decorators/swagger/admin-comment-docs.decorator';
 import { AdminCommentQueryDto } from '../dto/admin.comment-query.dto';
+import { AdminCommentService } from '../services/admin-comment.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('admin')
 export class AdminCommentController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(private readonly adminService: AdminCommentService) {}
 
   @AdminFindAllCommentDocs()
   @Roles('admin')

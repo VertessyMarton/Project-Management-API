@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AdminService } from './admin.service';
 import { AdminUserController } from './controllers/admin-user.controller';
 import { AdminProjectController } from './controllers/admin-project.controller';
 import { AdminTaskController } from './controllers/admin-task.controller';
@@ -12,6 +11,11 @@ import { Comment } from 'src/comment/entities/comment.entity';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { AdminStatController } from './controllers/admin-stats.controller';
+import { AdminUserService } from './services/admin-user.service';
+import { AdminProjectService } from './services/admin-project.service';
+import { AdminTaskService } from './services/admin-task.service';
+import { AdminCommentService } from './services/admin-comment.service';
+import { AdminStatsService } from './services/admin-stats.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User, Project, Task, Comment])],
@@ -22,6 +26,14 @@ import { AdminStatController } from './controllers/admin-stats.controller';
     AdminCommentController,
     AdminStatController,
   ],
-  providers: [AdminService, JwtAuthGuard, RolesGuard],
+  providers: [
+    AdminUserService,
+    AdminProjectService,
+    AdminTaskService,
+    AdminCommentService,
+    AdminStatsService,
+    JwtAuthGuard,
+    RolesGuard,
+  ],
 })
 export class AdminModule {}
