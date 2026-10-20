@@ -1,0 +1,17 @@
+.auth-footer {
+  margin: 1.5rem 0 0;
+  color: #6b7280;
+  font-size: 0.875rem;
+  line-height: 1.6;
+
+  a {
+    margin-left: 0.25rem;
+    color: #4f46e5;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+
+    &:hover {
+      color: #3730a3;
+    }
+  }
+}

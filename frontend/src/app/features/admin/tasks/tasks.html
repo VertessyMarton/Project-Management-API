@@ -1,0 +1,365 @@
+<main>
+     <div class="card">
+            <p-table
+                #tasksTable
+                dataKey="id"
+                [rows]="25"
+                [rowHover]="true"
+                [showGridlines]="true"
+                [paginator]="true"
+                responsiveLayout="scroll"
+                [loading]="isLoading()"
+                [value]="tasks()"
+                [lazy]="true"
+                [totalRecords]="totalRecords()"
+                (onLazyLoad)="loadTasks($event)"
+            >
+                <ng-template #caption>
+                    <div class="flex flex-col gap-5">
+                        <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            <div class="flex flex-col gap-2 sm:col-span-2 lg:col-span-2">
+                                <label for="task-search" class="text-sm font-medium text-surface-700 dark:text-surface-200">Search</label>
+                                <div class="flex items-center gap-3">
+                                <p-iconfield iconPosition="left" class="min-w-0 flex-1">
+                                    <p-inputicon><i class="pi pi-search"></i></p-inputicon>
+                                    <input 
+                                        #searchInput 
+                                        pInputText 
+                                        id="task-search" 
+                                        type="text" 
+                                        placeholder="Search tasks" 
+                                        class="h-11 w-full"
+                                        [value]="searchQuery()" 
+                                        (input)="onSearch(searchInput.value, tasksTable)"
+                                    />
+                                </p-iconfield>
+                                    <button pButton type="button" severity="secondary" [outlined]="true"
+                                        class="h-11 shrink-0 whitespace-nowrap" (click)="advancedFilters.toggle($event)">
+                                        <i class="pi pi-filter" aria-hidden="true"></i>
+                                        <span>Advanced filters</span>
+                                    </button>
+                                </div>
+                                <p-popover #advancedFilters class="contents" appendTo="body" ariaLabel="Advanced task filters">
+                                    <div class="flex w-72 max-w-[calc(100vw-3rem)] flex-col gap-4">
+                                        <div>
+                                            <div class="font-semibold text-surface-900 dark:text-surface-0">Filter by ID</div>
+                                        </div>
+                                        <div class="flex flex-col gap-2">
+                                            <label for="task-filter-project-id" class="text-sm font-medium text-surface-700 dark:text-surface-200">ProjectId</label>
+                                            <input 
+                                                #searchInput1
+                                                pInputText 
+                                                id="task-filter-project-id" 
+                                                type="number" 
+                                                min="1" 
+                                                step="1" 
+                                                placeholder="e.g. 64" 
+                                                class="w-full" 
+                                                [value]="projectIdQuery()"
+                                                (input)="onProjectIdSearch(searchInput1.valueAsNumber, tasksTable)"
+                                            />
+                                        </div>
+                                        <div class="flex flex-col gap-2">
+                                            <label for="task-filter-assignee-id" class="text-sm font-medium text-surface-700 dark:text-surface-200">AssigneeId</label>
+                                            <input 
+                                                #searchInput2
+                                                pInputText 
+                                                id="task-filter-assignee-id" 
+                                                type="number" 
+                                                min="1" 
+                                                step="1" 
+                                                placeholder="e.g. 12" 
+                                                class="w-full" 
+                                                [value]="assigneeIdQuery()"
+                                                (input)="onAssigneeIdSearch(searchInput2.valueAsNumber, tasksTable)"
+                                            />
+                                        </div>
+                                        <div class="flex flex-col gap-2">
+                                            <label for="task-filter-creator-id" class="text-sm font-medium text-surface-700 dark:text-surface-200">CreatedById</label>
+                                            <input 
+                                                #searchInput3
+                                                pInputText 
+                                                id="task-filter-creator-id" 
+                                                type="number" 
+                                                min="1" 
+                                                step="1" 
+                                                placeholder="e.g. 7" 
+                                                class="w-full"
+                                                [value]="createdByIdQuery()"
+                                                (input)="onCreatedByIdSearch(searchInput3.valueAsNumber, tasksTable)"
+                                            />
+                                        </div>
+                                    </div>
+                                </p-popover>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <label for="task-status" class="text-sm font-medium text-surface-700 dark:text-surface-200">Status</label>
+                                <p-select 
+                                    inputId="task-status" 
+                                    [options]="statusOptions" 
+                                    optionLabel="label" 
+                                    optionValue="value"
+                                    placeholder="All statuses" 
+                                    [showClear]="true" 
+                                    styleClass="h-11 w-full"
+                                    (onChange)="onStatusChange($event.value, tasksTable)"
+                                    (onClear)="onStatusChange(null, tasksTable)" />
+                            </div>
+                        </div>
+                        <div class="grid w-full grid-cols-1 items-end gap-4 md:grid-cols-2 xl:grid-cols-3">
+                            <fieldset class="w-full min-w-0 rounded-lg border border-surface-200 p-3 dark:border-surface-700">
+                                <legend class="px-2 text-sm font-semibold text-surface-700 dark:text-surface-200">Created date</legend>
+                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <div class="flex min-w-0 flex-col gap-2">
+                                        <label for="task-created-from" class="text-sm text-muted-color">Created from</label>
+                                        <input 
+                                            #dateInput1 
+                                            pInputText 
+                                            id="task-created-from" 
+                                            name="createdFrom" 
+                                            type="date" 
+                                            class="w-full min-w-0 text-sm"
+                                            [value]="createdFrom()" ű(input)="onCreatedFromChange(dateInput1.value, tasksTable)" />
+                                    </div>
+                                    <div class="flex min-w-0 flex-col gap-2">
+                                        <label for="task-created-to" class="text-sm text-muted-color">Created to</label>
+                                        <input 
+                                            #dateInput2 
+                                            pInputText 
+                                            id="task-created-to"
+                                            name="createdTo" 
+                                            type="date" 
+                                            class="w-full min-w-0 text-sm"
+                                            [value]="createdTo()" 
+                                            (input)="onCreatedToChange(dateInput2.value, tasksTable)" />
+                                    </div>
+                                </div>
+                            </fieldset>
+                            <fieldset class="w-full min-w-0 rounded-lg border border-surface-200 p-3 dark:border-surface-700">
+                                <legend class="px-2 text-sm font-semibold text-surface-700 dark:text-surface-200">Due date</legend>
+                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <div class="flex min-w-0 flex-col gap-2">
+                                        <label for="task-due-from" class="text-sm text-muted-color">Due from</label>
+                                        <input 
+                                            #dateInput3 
+                                            pInputText 
+                                            id="task-due-from" 
+                                            name="dueFrom" 
+                                            type="date" 
+                                            class="w-full min-w-0 text-sm"
+                                            [value]="dueFrom()" 
+                                            (input)="onDueFromChange(dateInput3.value, tasksTable)" />
+                                    </div>
+                                    <div class="flex min-w-0 flex-col gap-2">
+                                        <label for="task-due-to" class="text-sm text-muted-color">Due to</label>
+                                        <input 
+                                            #dateInput4
+                                            pInputText 
+                                            id="task-due-to" 
+                                            name="dueTo" 
+                                            type="date" 
+                                            class="w-full min-w-0 text-sm"
+                                            [value]="dueTo()" 
+                                            (input)="onDueToChange(dateInput4.value, tasksTable)" />
+                                    </div>
+                                </div>
+                            </fieldset>
+                            <div class="grid min-w-0 grid-cols-1 gap-3 py-1 md:col-span-2 md:grid-cols-2 xl:col-span-1 xl:grid-cols-1">
+                            <div class="flex min-w-0 flex-col gap-2">
+                                <span id="task-assignment-label" class="text-sm font-medium text-surface-700 dark:text-surface-200"></span>
+                                <p-selectbutton
+                                    [options]="['All', 'Assigned', 'Unassigned']" 
+                                    ngModel="All" 
+                                    [allowEmpty]="false" 
+                                    [fluid]="true" 
+                                    ariaLabelledBy="task-assignment-label"
+                                    (onChange)="onAssignmentChange($event.value, tasksTable)"
+                                />
+                            </div>
+                            <div class="flex min-w-0 flex-col gap-2">
+                                <span id="task-overdue-label" class="text-sm font-medium text-surface-700 dark:text-surface-200"></span>
+                                <p-selectbutton
+                                    [options]="['All', 'Overdue', 'Not overdue']"
+                                    ngModel="All"
+                                    [allowEmpty]="false"
+                                    [fluid]="true"
+                                    ariaLabelledBy="task-overdue-label"
+                                    (onChange)="onOverdueChange($event.value, tasksTable)"
+                                />
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                </ng-template>
+                <ng-template #header>
+                    <tr>
+                        <th>
+                            <div class="flex justify-between items-center">Id</div>
+                        </th>
+                        <th pSortableColumn="title" style="min-width: 12rem">
+                            <div class="flex justify-between items-center">
+                                Title
+                                <p-sortIcon field="title"/>
+                            </div>
+                        </th>
+                        <th style="min-width: 12rem">
+                            <div class="flex justify-between items-center">Description</div>
+                        </th>
+                        <th style="min-width: 7rem">
+                            <div class="flex justify-between items-center">Status</div>
+                        </th>
+                         <th pSortableColumn="dueDate" style="min-width: 12rem">
+                            <div class="flex justify-between items-center">
+                                DueDate
+                                <p-sortIcon field="dueDate"/>
+                            </div>
+                        </th>
+                        <th style="min-width: 12rem">
+                            <div class="flex justify-between items-center">Created by</div>
+                        </th>
+                        <th style="min-width: 12rem">
+                            <div class="flex justify-between items-center">Assignee</div>
+                        </th>
+                        <th style="min-width: 12rem">
+                            <div class="flex justify-between items-center">Project</div>
+                        </th>
+                        <th pSortableColumn="createdAt" style="min-width: 12rem">
+                            <div class="flex justify-between items-center">
+                                CreatedAt
+                                <p-sortIcon field="createdAt"/>
+                            </div>
+                        </th>
+                        <th pSortableColumn="updatedAt" style="min-width: 12rem">
+                            <div class="flex justify-between items-center">
+                                UpdatedAt
+                                <p-sortIcon field="updatedAt"/>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="flex justify-between items-center">Delete</div>
+                        </th>
+                    </tr>
+                </ng-template>
+                <ng-template #body let-task>
+                    <tr>
+                        <td>
+                            {{ task.id }}
+                        </td>
+                        <td>
+                            {{ task.title }}
+                        </td>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                
+                                <span> {{ task.description }} </span>
+                            </div>
+                        </td>
+                        <td>
+                            {{ task.status }}
+                        </td>
+                        <td>
+                            {{ task.dueDate | date: 'dd MMM yyyy, HH:mm' }}
+                        </td>
+                        <td>
+                            @if (task.createdBy; as createdBy) {
+                                <details class="max-w-64">
+                                    <summary class="assignee-summary cursor-pointer rounded-sm font-medium text-surface-900 dark:text-surface-0 wrap-anywhere hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+                                        {{ createdBy.name }}
+                                    </summary>
+                                    <div class="mt-2 flex flex-col gap-1 border-l-2 border-surface-200 pl-3 dark:border-surface-700">
+                                        <span class="text-xs text-muted-color">userId: {{ createdBy.id }}</span>
+                                    </div>
+                                </details>
+                            } @else {
+                                <span class="inline-flex items-center gap-2 rounded-md bg-surface-100 px-2 py-1 text-sm text-muted-color dark:bg-surface-800">
+                                    <i class="pi pi-user" aria-hidden="true"></i>
+                                    Deleted user
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            @if (task.assignee; as assignee) {
+                                <details class="max-w-64">
+                                    <summary class="assignee-summary cursor-pointer rounded-sm font-medium text-surface-900 dark:text-surface-0 wrap-anywhere hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+                                        {{ assignee.name }}
+                                    </summary>
+                                    <div class="mt-2 flex flex-col gap-1 border-l-2 border-surface-200 pl-3 dark:border-surface-700">
+                                        <span class="text-xs text-muted-color">userId: {{ assignee.id }}</span>
+                                    </div>
+                                </details>
+                            } @else {
+                                <span class="inline-flex items-center gap-2 rounded-md bg-surface-100 px-2 py-1 text-sm text-muted-color dark:bg-surface-800">
+                                    <i class="pi pi-user" aria-hidden="true"></i>
+                                    Unassigned
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            @if (task.project; as project) {
+                                <details class="max-w-64">
+                                    <summary class="assignee-summary cursor-pointer rounded-sm font-medium text-surface-900 dark:text-surface-0 wrap-anywhere hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+                                        {{ project.name }}
+                                    </summary>
+                                    <div class="mt-2 flex flex-col gap-1 border-l-2 border-surface-200 pl-3 dark:border-surface-700">
+                                        <span class="text-xs text-muted-color">userId: {{ project.id }}</span>
+                                    </div>
+                                </details>
+                            }
+                        </td>
+                        <td>
+                            {{ task.createdAt | date: 'dd MMM yyyy, HH:mm' }}
+                        </td>
+                        <td class="text-center">
+                            {{ task.updatedAt | date: 'dd MMM yyyy, HH:mm' }}
+                        </td>
+                        <td>
+                            <p-button type="button" icon="pi pi-trash" severity="danger"
+                                [ariaLabel]="'Delete task ' + task.title"
+                                (onClick)="errorMessage.set(''); deleteDialog.showModal()" />
+                            <dialog #deleteDialog aria-label="Confirm task deletion"
+                                class="m-auto w-[28rem] max-w-[calc(100vw-2rem)] rounded-xl border border-surface-200 bg-surface-0 p-0 text-surface-900 shadow-xl backdrop:bg-black/50 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-0">
+                                <div class="p-6">
+                                    <div class="mb-4 flex items-center gap-3">
+                                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-300">
+                                            <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+                                        </span>
+                                        <h2 class="m-0 text-lg font-semibold">Delete task?</h2>
+                                    </div>
+                                    <p class="mb-1 font-medium wrap-anywhere">{{ task.title }}</p>
+                                    <p class="mt-0 mb-4 text-sm text-muted-color">taskId: {{ task.id }}</p>
+                                    <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
+                                        All comments on this task will also be deleted. This action cannot be undone.
+                                    </div>
+                                    @if (errorMessage()) {
+                                        <p role="alert" class="mt-3 text-sm text-red-600">{{ errorMessage() }}</p>
+                                    }
+                                    <div class="mt-6 flex justify-end gap-3">
+                                        <button pButton type="button" severity="secondary" [outlined]="true" autofocus (click)="deleteDialog.close()">Cancel</button>
+                                        <button 
+                                            pButton 
+                                            type="button" 
+                                            severity="danger"
+                                            [disabled]="isDeleting()"
+                                            (click)="deleteTask(task.id, tasksTable, deleteDialog)"
+                                        >
+                                            {{ isDeleting() ? 'Deleting...' : 'Delete task' }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </dialog>
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                    <tr>
+                        <td colspan="10">No tasks found.</td>
+                    </tr>
+                </ng-template>
+                <ng-template #loadingbody>
+                    <tr>
+                        <td colspan="10">Loading tasks data. Please wait.</td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+</main>
