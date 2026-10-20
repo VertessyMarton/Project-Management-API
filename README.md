@@ -87,10 +87,6 @@ docker compose down -v
 docker compose up --build
 ```
 
-### Database Schema
-
-![ERD](./docs/schema.png)
-
 ## File Structure
 
 This project follows the following file structure:
