@@ -147,8 +147,11 @@ export class AdminTaskService {
     const data = tasks.map((task) => ({
       id: task.id,
       title: task.title,
+      description: task.description,
       status: task.status,
       dueDate: task.dueDate,
+      createdAt: task.createdAt,
+      updatedAt: task.updatedAt,
 
       project: {
         id: task.project.id,

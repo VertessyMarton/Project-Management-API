@@ -47,9 +47,7 @@ export class AdminProjectService {
     }
 
     if (memberId !== undefined) {
-      qb.innerJoin(
-        'project.projectMembers',
-        'member',
+      qb.innerJoin('project.projectMembers', 'member').andWhere(
         'member.userId = :memberId',
         { memberId },
       );
