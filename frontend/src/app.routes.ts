@@ -14,7 +14,7 @@ import { AdminOauthUsers } from './app/features/admin/components/oauth/oauth';
 
 export const appRoutes: Routes = [
     {
-        path: 'reset-passw1ord',
+        path: 'reset-password',
         loadComponent: () =>
             import('./app/features/auth/pages/reset-password/reset-password').then(
                 (m) => m.ResetPassword
