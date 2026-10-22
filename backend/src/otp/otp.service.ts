@@ -154,7 +154,9 @@ export class OtpService {
     });
 
     if (!record) {
-      throw new UnauthorizedException(message);
+      return {
+        message,
+      };
     }
 
     await this.otpRepository.delete({
