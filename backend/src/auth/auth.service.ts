@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -84,7 +85,11 @@ export class AuthService {
 
   async login(user: AuthenticatedUser): Promise<LoginResult> {
     if (user.status === 'unverified') {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new ForbiddenException({
+        code: 'EMAIL_NOT_VERIFIED',
+        message: 'Email needs to be verified before signing in.',
+        statusCode: 403,
+      });
     }
 
     const payload = { sub: user.id, role: user.role };

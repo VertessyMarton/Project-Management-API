@@ -1,6 +1,7 @@
 import { User } from 'src/user/entities/user.entity';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   Index,
   JoinColumn,
@@ -29,4 +30,10 @@ export class OauthAccount {
   })
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @Column({ name: 'user_id' })
+  userId: number;
+
+  @CreateDateColumn({ name: 'linked_at' })
+  linkedAt: Date;
 }
