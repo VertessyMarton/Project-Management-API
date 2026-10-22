@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { API_URL } from '../api.url';
+import { API_URL } from '@/app/core/api.url';
 
 export type TaskStatus = 'todo' | 'in_progress' | 'review' | 'done';
 

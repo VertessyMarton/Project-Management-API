@@ -5,18 +5,19 @@ import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
-import { debounceTime, Subject } from 'rxjs';
+import { debounceTime, delay, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SelectModule } from 'primeng/select';
+import {
+    AdminTaskService,
+    Tasks,
+    TaskStatus
+} from '../../services/admin-task.service';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import {
-    AdminCommentService,
-    Comments
-} from '@/app/core/services/admin-comment.service';
 import { PopoverModule } from 'primeng/popover';
-import { DatePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
+import { DatePipe } from '@angular/common';
 
 @Component({
     selector: 'app-users',
@@ -34,20 +35,27 @@ import { ButtonModule } from 'primeng/button';
         ButtonModule,
         DatePipe
     ],
-    templateUrl: './comments.html',
-    styleUrl: './comments.scss'
+    templateUrl: './tasks.html',
+    styleUrl: './tasks.scss'
 })
-export class AdminComments {
+export class AdminTasks {
     private delayedSearchChanges = new Subject<Table>();
     private reloadRequests = new Subject<Table>();
 
-    constructor(private commentService: AdminCommentService) {
+    statusOptions = [
+        { label: 'todo', value: 'todo' },
+        { label: 'in_progress', value: 'in_progress' },
+        { label: 'review', value: 'review' },
+        { label: 'done', value: 'done' }
+    ];
+
+    constructor(private userService: AdminTaskService) {
         this.delayedSearchChanges
             .pipe(debounceTime(300), takeUntilDestroyed())
             .subscribe((table) => {
                 table.first = 0;
 
-                this.loadComments({
+                this.loadTasks({
                     first: 0,
                     rows: table.rows ?? 25
                 });
@@ -56,7 +64,7 @@ export class AdminComments {
         this.reloadRequests.pipe(takeUntilDestroyed()).subscribe((table) => {
             table.first = 0;
 
-            this.loadComments({
+            this.loadTasks({
                 first: 0,
                 rows: table.rows ?? 25
             });
@@ -64,20 +72,25 @@ export class AdminComments {
     }
 
     isLoading = signal(false);
-    comments = signal<Comments[]>([]);
+    tasks = signal<Tasks[]>([]);
     totalRecords = signal(0);
     searchQuery = signal('');
     projectIdQuery = signal<number | undefined>(undefined);
-    taskIdQuery = signal<number | undefined>(undefined);
-    authorIdQuery = signal<number | undefined>(undefined);
+    assigneeIdQuery = signal<number | undefined>(undefined);
+    createdByIdQuery = signal<number | undefined>(undefined);
+    selectedStatus = signal<TaskStatus | undefined>(undefined);
+    hasAssignee = signal<boolean | undefined>(undefined);
+    isOverdue = signal<boolean | undefined>(undefined);
     createdFrom = signal('');
     createdTo = signal('');
+    dueFrom = signal('');
+    dueTo = signal('');
     sortOrder = signal<'asc' | 'desc' | undefined>(undefined);
     sortBy = signal<string | undefined>(undefined);
     isDeleting = signal(false);
     errorMessage = signal('');
 
-    loadComments(event: TableLazyLoadEvent) {
+    loadTasks(event: TableLazyLoadEvent) {
         const limit = event.rows ?? 25;
         const page = Math.floor((event.first ?? 0) / limit) + 1;
         const hasSortField = typeof event.sortField === 'string';
@@ -90,14 +103,19 @@ export class AdminComments {
 
         this.sortBy.set(sortBy);
 
-        this.commentService
-            .getComments(
+        this.userService
+            .getTasks(
                 page,
                 limit,
                 this.searchQuery() || undefined,
                 this.projectIdQuery(),
-                this.taskIdQuery(),
-                this.authorIdQuery(),
+                this.selectedStatus(),
+                this.assigneeIdQuery(),
+                this.createdByIdQuery(),
+                this.hasAssignee(),
+                this.isOverdue(),
+                this.dueFrom() || undefined,
+                this.dueTo() || undefined,
                 this.createdFrom() || undefined,
                 this.createdTo() || undefined,
                 this.sortBy(),
@@ -105,7 +123,8 @@ export class AdminComments {
             )
             .subscribe({
                 next: (response) => {
-                    this.comments.set(response.data);
+                    console.log(response.data);
+                    this.tasks.set(response.data);
                     this.isLoading.set(false);
                     this.totalRecords.set(response.meta.total);
                 }
@@ -118,7 +137,7 @@ export class AdminComments {
         }
         this.isDeleting.set(true);
         this.errorMessage.set('');
-        this.commentService.deleteComment(id).subscribe({
+        this.userService.deleteTask(id).subscribe({
             next: () => {
                 dialog.close();
                 this.isDeleting.set(false);
@@ -143,18 +162,36 @@ export class AdminComments {
         this.delayedSearchChanges.next(table);
     }
 
-    onTaskIdSearch(value: number, table: Table) {
-        this.taskIdQuery.set(
+    onAssigneeIdSearch(value: number, table: Table) {
+        this.assigneeIdQuery.set(
             Number.isInteger(value) && value > 0 ? value : undefined
         );
         this.delayedSearchChanges.next(table);
     }
 
-    onAuthorIdSearch(value: number, table: Table) {
-        this.authorIdQuery.set(
+    onCreatedByIdSearch(value: number, table: Table) {
+        this.createdByIdQuery.set(
             Number.isInteger(value) && value > 0 ? value : undefined
         );
         this.delayedSearchChanges.next(table);
+    }
+
+    onStatusChange(value: TaskStatus | null, table: Table) {
+        this.selectedStatus.set(value ?? undefined);
+        this.reloadRequests.next(table);
+    }
+
+    onAssignmentChange(value: 'All' | 'Assigned' | 'Unassigned', table: Table) {
+        this.hasAssignee.set(
+            value === 'All' ? undefined : value === 'Assigned'
+        );
+
+        this.reloadRequests.next(table);
+    }
+    onOverdueChange(value: 'All' | 'Overdue' | 'Not overdue', table: Table) {
+        this.isOverdue.set(value === 'All' ? undefined : value === 'Overdue');
+
+        this.reloadRequests.next(table);
     }
 
     onCreatedFromChange(value: string, table: Table) {
@@ -164,6 +201,16 @@ export class AdminComments {
 
     onCreatedToChange(value: string, table: Table) {
         this.createdTo.set(value);
+        this.reloadRequests.next(table);
+    }
+
+    onDueFromChange(value: string, table: Table) {
+        this.dueFrom.set(value);
+        this.reloadRequests.next(table);
+    }
+
+    onDueToChange(value: string, table: Table) {
+        this.dueTo.set(value);
         this.reloadRequests.next(table);
     }
 }

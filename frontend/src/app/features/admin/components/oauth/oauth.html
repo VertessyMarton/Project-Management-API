@@ -1,0 +1,186 @@
+<main>
+     <div class="card">
+            <p-table
+                #oauthUsersTable
+                dataKey="id"
+                [rows]="25"
+                [rowHover]="true"
+                [showGridlines]="true"
+                [paginator]="true"
+                responsiveLayout="scroll"
+                [loading]="isLoading()"
+                [value]="oauthUsers()"
+                [lazy]="true"
+                [totalRecords]="totalRecords()"
+                (onLazyLoad)="loadOauthUsers($event)"
+            >
+                <ng-template #caption>
+                    <div class="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end">
+                        <div class="grid w-full grid-cols-1 gap-4 sm:grid-cols-3 lg:w-auto">
+                            <div class="flex flex-col gap-2 lg:w-48">
+                                <label for="oauth-linked-from" class="text-sm font-medium text-surface-700 dark:text-surface-200">Linked from</label>
+                                <input
+                                    #dateInput1
+                                    pInputText
+                                    id="oauth-linked-from"
+                                    name="linkedFrom"
+                                    type="date"
+                                    class="w-full"
+                                    [value]="linkedFrom()"
+                                    (input)="onLinkedFromChange(dateInput1.value, oauthUsersTable)"
+                                />
+                            </div>
+                            <div class="flex flex-col gap-2 lg:w-48">
+                                <label for="oauth-linked-to" class="text-sm font-medium text-surface-700 dark:text-surface-200">Linked to</label>
+                                <input
+                                    #dateInput2
+                                    pInputText
+                                    id="oauth-linked-to"
+                                    name="linkedTo"
+                                    type="date"
+                                    class="w-full"
+                                    [value]="linkedTo()"
+                                    (input)="onLinkedToChange(dateInput2.value, oauthUsersTable)"
+                                />
+                            </div>
+                            <div class="flex flex-col justify-end lg:w-48">
+                                <p-select
+                                    inputId="oauth-provider-filter"
+                                    [options]="providerOptions"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    placeholder="All providers"
+                                    [showClear]="true"
+                                    styleClass="w-full"
+                                    (onChange)="onProviderChange($event.value, oauthUsersTable)"
+                                    (onClear)="onProviderChange(null, oauthUsersTable)"
+                                />
+                            </div>
+                        </div>
+                        <div class="flex w-full flex-wrap items-center gap-3 lg:ml-auto lg:w-auto">
+                        <p-iconfield iconPosition="left" class="w-full lg:w-80 lg:shrink-0">
+                            <p-inputicon>
+                                <i class="pi pi-search"></i>
+                            </p-inputicon>
+                            <input 
+                                #searchInput 
+                                pInputText 
+                                type="text" 
+                                placeholder="Search Oauth Users"
+                                aria-label="Search Oauth Users"
+                                class="w-full" 
+                                [value]="searchQuery()"
+                                (input)="onSearch(searchInput.value, oauthUsersTable)"
+                            />
+                        </p-iconfield>
+                            <button pButton type="button" severity="secondary" [outlined]="true"
+                                class="shrink-0 whitespace-nowrap" (click)="advancedFilters.toggle($event)">
+                                <i class="pi pi-filter" aria-hidden="true"></i>
+                                <span>Advanced filters</span>
+                            </button>
+                            <p-popover #advancedFilters class="contents" appendTo="body" ariaLabel="Advanced project filters">
+                                <div class="flex w-72 max-w-[calc(100vw-3rem)] flex-col gap-4">
+                                    <div class="font-semibold text-surface-900 dark:text-surface-0">Filter by ID</div>
+                                    <div class="flex flex-col gap-2">
+                                        <label for="oauth-filter-user-id" class="text-sm font-medium text-surface-700 dark:text-surface-200">UserId</label>
+                                        <input 
+                                            #userIdInput 
+                                            pInputText 
+                                            id="oauth-filter-user-id" 
+                                            type="number" 
+                                            min="1" 
+                                            step="1"
+                                            class="w-full"
+                                            [value]="userIdQuery()"
+                                            (input)="onUserIdSearch(userIdInput.valueAsNumber, oauthUsersTable)" 
+                                        />
+                                    </div>
+                                    <div class="flex flex-col gap-2">
+                                        <label for="oauth-filter-provider-id" class="text-sm font-medium text-surface-700 dark:text-surface-200">ProviderId</label>
+                                        <input 
+                                            #providerIdInput 
+                                            pInputText 
+                                            id="oauth-filter-provider-id" 
+                                            type="string" 
+                                            min="1" 
+                                            step="1"
+                                            class="w-full"
+                                            [value]="providerIdQuery()"
+                                            (input)="onProviderIdSearch(providerIdInput.value, oauthUsersTable)" 
+                                        />
+                                    </div>
+                                </div>
+                            </p-popover>
+
+                        </div>
+                        </div>
+                </ng-template>
+                <ng-template #header>
+                    <tr>
+                         <th pSortableColumn="id">
+                            <div class="flex justify-between items-center">
+                                Id
+                                <p-sortIcon field="id"/>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="flex justify-between items-center">Provider</div>
+                        </th>
+                        <th style="min-width: 12rem">
+                            <div class="flex justify-between items-center">Provider Id</div>
+                        </th>
+                        <th pSortableColumn="email" style="min-width: 12rem">
+                            <div class="flex justify-between items-center">
+                                Email
+                                <p-sortIcon field="email"/>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="flex justify-between items-center">User Id</div>
+                        </th>
+                         <th pSortableColumn="linkedAt" style="min-width: 12rem">
+                            <div class="flex justify-between items-center">
+                                Linked At
+                                <p-sortIcon field="linkedAt"/>
+                            </div>
+                        </th>
+                    </tr>
+                </ng-template>
+                <ng-template #body let-oauth>
+                    <tr>
+                        <td>
+                            {{ oauth.id }}
+                        </td>
+                        <td>
+                            {{ oauth.provider }}
+                        </td>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                
+                                <span> {{ oauth.providerUserId }} </span>
+                            </div>
+                        </td>
+                        <td>
+                            {{ oauth.email }}
+                        </td>
+                        <td>
+                            {{ oauth.userId }}
+                        </td>
+                        <td class="text-center">
+                            {{ oauth.linkedAt | date: 'dd MMM yyyy, HH:mm' }}
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                    <tr>
+                        <td colspan="6">No outh users found.</td>
+                    </tr>
+                </ng-template>
+                <ng-template #loadingbody>
+                    <tr>
+                        <td colspan="6">Loading outh users data. Please wait.</td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+</main>

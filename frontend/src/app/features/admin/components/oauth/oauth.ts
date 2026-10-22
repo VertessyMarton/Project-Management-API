@@ -8,13 +8,14 @@ import { TagModule } from 'primeng/tag';
 import { debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SelectModule } from 'primeng/select';
-import {
-    AdminProjectService,
-    Projects
-} from '@/app/core/services/admin-project.service';
 import { ButtonModule } from 'primeng/button';
 import { DatePipe } from '@angular/common';
 import { PopoverModule } from 'primeng/popover';
+import {
+    AdminOauthService,
+    OauthUsers,
+    Providers
+} from '../../services/admin-oauth.service';
 
 @Component({
     selector: 'app-users',
@@ -30,19 +31,25 @@ import { PopoverModule } from 'primeng/popover';
         DatePipe,
         PopoverModule
     ],
-    templateUrl: './projects.html',
-    styleUrl: './projects.scss'
+    templateUrl: './oauth.html',
+    styleUrl: './oauth.scss'
 })
-export class AdminProjects {
+export class AdminOauthUsers {
     private reloadRequests = new Subject<Table>();
 
-    constructor(private projectService: AdminProjectService) {
+    providerOptions = [
+        { label: 'google', value: 'google' },
+        { label: 'github', value: 'github' },
+        { label: 'microsoft', value: 'microsoft' }
+    ];
+
+    constructor(private oathService: AdminOauthService) {
         this.reloadRequests
             .pipe(debounceTime(300), takeUntilDestroyed())
             .subscribe((table) => {
                 table.first = 0;
 
-                this.loadProjects({
+                this.loadOauthUsers({
                     first: 0,
                     rows: table.rows ?? 25
                 });
@@ -50,18 +57,20 @@ export class AdminProjects {
     }
 
     isLoading = signal(false);
-    projects = signal<Projects[]>([]);
+    oauthUsers = signal<OauthUsers[]>([]);
     totalRecords = signal(0);
     searchQuery = signal('');
-    memberIdQuery = signal<number | undefined>(undefined);
+    onSelectedProvider = signal<Providers | undefined>(undefined);
+    userIdQuery = signal<number | undefined>(undefined);
+    providerIdQuery = signal<string | undefined>(undefined);
     sortOrder = signal<'asc' | 'desc' | undefined>(undefined);
     sortBy = signal<string | undefined>(undefined);
-    createdFrom = signal('');
-    createdTo = signal('');
+    linkedFrom = signal('');
+    linkedTo = signal('');
     isDeleting = signal(false);
     errorMessage = signal('');
 
-    loadProjects(event: TableLazyLoadEvent) {
+    loadOauthUsers(event: TableLazyLoadEvent) {
         const limit = event.rows ?? 25;
         const page = Math.floor((event.first ?? 0) / limit) + 1;
         const hasSortField = typeof event.sortField === 'string';
@@ -74,64 +83,61 @@ export class AdminProjects {
 
         this.sortBy.set(sortBy);
 
-        this.projectService
-            .getProjects(
+        this.oathService
+            .getOauthUsers(
                 page,
                 limit,
                 this.searchQuery() || undefined,
-                this.memberIdQuery(),
-                this.createdFrom() || undefined,
-                this.createdTo() || undefined,
+                this.onSelectedProvider(),
+                this.userIdQuery() || undefined,
+                this.providerIdQuery() || undefined,
+                this.linkedFrom() || undefined,
+                this.linkedTo() || undefined,
                 this.sortBy(),
                 this.sortOrder()
             )
             .subscribe({
                 next: (response) => {
-                    this.projects.set(response.data);
+                    this.oauthUsers.set(response.data);
                     this.isLoading.set(false);
                     this.totalRecords.set(response.meta.total);
                 }
             });
     }
 
-    deleteTask(id: number, table: Table, dialog: HTMLDialogElement) {
-        if (this.isDeleting()) {
-            return;
-        }
-        this.isDeleting.set(true);
-        this.errorMessage.set('');
-        this.projectService.deleteProject(id).subscribe({
-            next: () => {
-                dialog.close();
-                this.isDeleting.set(false);
-                this.reloadRequests.next(table);
-            },
-            error: () => {
-                this.isDeleting.set(false);
-                this.errorMessage.set('Could not delete task');
-            }
-        });
-    }
-
     onSearch(value: string, table: Table) {
         this.searchQuery.set(value);
         this.reloadRequests.next(table);
     }
+    onProviderChange(value: Providers | null, table: Table) {
+        console.log(value);
+        this.onSelectedProvider.set(value ?? undefined);
 
-    onMemberIdSearch(value: number, table: Table) {
-        this.memberIdQuery.set(
+        this.loadOauthUsers({
+            first: 0,
+            rows: table.rows ?? 25
+        });
+    }
+
+    onUserIdSearch(value: number, table: Table) {
+        this.userIdQuery.set(
             Number.isInteger(value) && value > 0 ? value : undefined
         );
         this.reloadRequests.next(table);
     }
 
-    onCreatedFromChange(value: string, table: Table) {
-        this.createdFrom.set(value);
+    onProviderIdSearch(value: string, table: Table) {
+        this.providerIdQuery.set(value ?? undefined);
         this.reloadRequests.next(table);
     }
 
-    onCreatedToChange(value: string, table: Table) {
-        this.createdTo.set(value);
+    onLinkedFromChange(value: string, table: Table) {
+        this.linkedFrom.set(value);
+        this.reloadRequests.next(table);
+    }
+
+    onLinkedToChange(value: string, table: Table) {
+        this.linkedTo.set(value);
         this.reloadRequests.next(table);
     }
 }

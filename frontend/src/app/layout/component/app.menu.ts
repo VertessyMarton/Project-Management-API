@@ -42,6 +42,11 @@ export class AppMenu {
                         routerLink: ['/admin/users']
                     },
                     {
+                        label: 'Linked accounts',
+                        icon: 'pi pi-fw pi-table',
+                        routerLink: ['/admin/oauth']
+                    },
+                    {
                         label: 'Projects',
                         icon: 'pi pi-fw pi-table',
                         routerLink: ['/admin/projects']
