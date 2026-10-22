@@ -1,4 +1,4 @@
-import { AuthService } from '@/app/core/services/auth.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -7,6 +7,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { AppFloatingConfigurator } from '@/app/layout/component/app.floatingconfigurator';
 import { delay } from 'rxjs';
+import { EmailVerificationDialog } from '../../components/email-verification-dialog/email-verification-dialog';
+import { EmailVerificiationService } from '../../services/email-verification.service';
+import { ForgotPasswordDialog } from '../../components/forgot-password-dialog/forgot-password-dialog';
 
 @Component({
     selector: 'app-login',
@@ -16,7 +19,9 @@ import { delay } from 'rxjs';
         ButtonModule,
         InputTextModule,
         PasswordModule,
-        AppFloatingConfigurator
+        AppFloatingConfigurator,
+        EmailVerificationDialog,
+        ForgotPasswordDialog
     ],
     templateUrl: './login.html',
     styleUrl: './login.scss'
@@ -24,6 +29,7 @@ import { delay } from 'rxjs';
 export class Login {
     constructor(
         private auth: AuthService,
+        private emailVerificationService: EmailVerificiationService,
         private router: Router
     ) {
         const message =
@@ -41,6 +47,10 @@ export class Login {
     successMessage = signal('');
     errorMessage = signal('');
     isSubmitting = signal(false);
+    showVerification = signal(false);
+    showForgotPassword = signal(false);
+    resetEmail = '';
+    verificationSendError = signal('');
 
     onSignIn() {
         if (this.isSubmitting()) return;
@@ -48,6 +58,8 @@ export class Login {
         this.successMessage.set('');
         this.errorMessage.set('');
         this.isSubmitting.set(true);
+        this.showVerification.set(false);
+        this.verificationSendError.set('');
 
         this.auth
             .login({
@@ -63,7 +75,24 @@ export class Login {
                             : '/user/dashboard'
                     ]);
                 },
-                error: () => {
+                error: (error) => {
+                    if (
+                        error.status === 403 &&
+                        error.error?.code === 'EMAIL_NOT_VERIFIED'
+                    ) {
+                        this.emailVerificationService
+                            .resendEmailVerification({ email: this.email })
+                            .subscribe({
+                                error: () => {
+                                    this.verificationSendError.set(
+                                        'Sending the verification code failed, try again'
+                                    );
+                                }
+                            });
+                        this.showVerification.set(true);
+                        this.isSubmitting.set(false);
+                        return;
+                    }
                     this.errorMessage.set('Login failed. Please try again.');
                     this.isSubmitting.set(false);
                 }
@@ -77,6 +106,7 @@ export class Login {
     onGithubSignIn() {
         this.auth.githubLogin();
     }
+
     onMicrosoftSignIn() {
         this.auth.microsoftLogin();
     }

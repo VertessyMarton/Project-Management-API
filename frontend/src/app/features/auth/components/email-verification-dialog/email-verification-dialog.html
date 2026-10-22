@@ -1,0 +1,78 @@
+<p-dialog
+    [visible]="visible()"
+    (visibleChange)="visibleChange.emit($event)"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [dismissableMask]="false"
+    [showHeader]="false"
+    [contentStyle]="{ padding: '0' }"
+    [maskStyle]="{
+        background: 'rgba(0, 0, 0, 0.68)',
+        backdropFilter: 'blur(3px)',
+        '-webkit-backdrop-filter': 'blur(3px)'
+    }"
+    [style]="{
+        width: '500px',
+        maxWidth: 'calc(100vw - 2rem)',
+        background: '#191A1E',
+        border: '1px solid #383A42',
+        borderRadius: '16px',
+        boxShadow: '0 24px 70px rgba(0,0,0,0.45)',
+        '--p-dialog-color': '#f4f4f5',
+        '--p-text-color': '#f4f4f5',
+        '--p-text-muted-color': '#9ca0ab',
+        '--p-inputtext-background': '#101216',
+        '--p-inputtext-border-color': '#383A42',
+        '--p-inputtext-color': '#f4f4f5'
+    }"
+    ariaLabelledBy="email-verification-title"
+>
+    <div class="verification-content">
+        <button type="button" class="verification-close" aria-label="Close email verification" (click)="visibleChange.emit(false)">
+            <i class="pi pi-times" aria-hidden="true"></i>
+        </button>
+
+        <div class="verification-icon" aria-hidden="true">
+            <i class="pi pi-envelope"></i>
+        </div>
+        <h2 id="email-verification-title" class="verification-title">Verify your email</h2>
+        <p id="verification-instructions" class="verification-instructions">Enter the 6-digit verification code we sent to</p>
+        @if (email()) {
+            <p class="verification-email">{{ email() }}</p>
+        }
+
+        <div class="verification-code" role="group" aria-label="Six-digit verification code" aria-describedby="verification-instructions verification-code-help">
+            <p-inputotp [length]="6" [integerOnly]="true" [(ngModel)]="otp">
+                <ng-template #input let-value let-events="events" let-index="index">
+                    <input class="verification-digit" type="text" inputmode="numeric" maxlength="1"
+                        [value]="value ?? ''" [attr.aria-label]="'Digit ' + index + ' of 6'"
+                        [attr.autocomplete]="index === 1 ? 'one-time-code' : 'off'"
+                        (input)="events.input($event)" (keydown)="events.keydown($event)"
+                        (focus)="events.focus($event)" (blur)="events.blur($event)" (paste)="events.paste($event)" />
+                </ng-template>
+            </p-inputotp>
+        </div>
+        <div class="verification-messages">
+        @if (message(); as currentMessage) {
+            <p
+                role="status"
+                class="text-sm"
+                [class.text-red-500]="currentMessage.type === 'error'"
+                [class.text-green-500]="currentMessage.type === 'success'"
+            >
+                {{ currentMessage.text }}
+            </p>
+}
+        </div>
+        <button type="button" class="verification-submit" [disabled]=isSubmitting() (click)="onVerifyEmail()">
+            {{ isSubmitting() ? 'Verifying email...' : 'Verify email' }}
+        </button>
+        <div class="verification-resend">
+            <span>Didn't receive a code?</span>
+            <button type="button" class="verification-resend-button" [disabled]=isResending() (click)="onResendVerification()">Resend code</button>
+        </div>
+        <p id="verification-code-help" class="verification-code-help">Check your spam folder if it hasn't arrived.</p>
+        <button type="button" class="verification-later" (click)="visibleChange.emit(false)">Continue later</button>
+    </div>
+</p-dialog>

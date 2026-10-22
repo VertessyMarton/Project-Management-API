@@ -47,3 +47,11 @@
                 </div>
             </div>
         </div>
+
+        <app-email-verification-dialog
+            (verified)="onEmailVerified()"
+            [email]="email"
+            [sendError]="verificationSendError()"
+            [visible]="showVerification()"
+            (visibleChange)="showVerification.set($event)"
+        />
