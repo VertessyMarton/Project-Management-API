@@ -100,7 +100,7 @@ describe('Auth (e2e)', () => {
         email: user.email,
         password: user.password,
       })
-      .expect(401);
+      .expect(403);
   });
 
   it('Verified user can login', async () => {

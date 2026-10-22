@@ -1,4 +1,8 @@
-import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import bcrypt from 'bcryptjs';
 import { OtpEnum } from '../otp/enums/otp.enum';
 import { UserRoleEnum } from '../user/enums/user-role.enum';
@@ -112,7 +116,7 @@ describe('AuthService', () => {
         role: UserRoleEnum.USER,
         status: UserStatusEnum.UNVERIFIED,
       }),
-    ).rejects.toBeInstanceOf(UnauthorizedException);
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
   it('returns an access token and refresh token when login succeeds', async () => {
