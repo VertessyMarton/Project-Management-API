@@ -16,11 +16,17 @@ import { AdminProjectService } from './services/admin-project.service';
 import { AdminTaskService } from './services/admin-task.service';
 import { AdminCommentService } from './services/admin-comment.service';
 import { AdminStatsService } from './services/admin-stats.service';
+import { AdminOauthController } from './controllers/admin-oauth.controller';
+import { AdminOauthService } from './services/admin-oauth.service';
+import { OauthAccount } from 'src/auth/entities/oauth-account.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Project, Task, Comment])],
+  imports: [
+    TypeOrmModule.forFeature([User, Project, Task, Comment, OauthAccount]),
+  ],
   controllers: [
     AdminUserController,
+    AdminOauthController,
     AdminProjectController,
     AdminTaskController,
     AdminCommentController,
@@ -28,6 +34,7 @@ import { AdminStatsService } from './services/admin-stats.service';
   ],
   providers: [
     AdminUserService,
+    AdminOauthService,
     AdminProjectService,
     AdminTaskService,
     AdminCommentService,
