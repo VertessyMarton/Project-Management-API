@@ -21,6 +21,9 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { RefreshToken } from './auth/entities/refresh-token.entity';
 import { OauthAccount } from './auth/entities/oauth-account.entity';
+import { AuditLogController } from './audit-log/audit-log.controller';
+import { AuditLogService } from './audit-log/audit-log.service';
+import { AuditLogModule } from './audit-log/audit-log.module';
 
 @Module({
   imports: [
@@ -57,7 +60,7 @@ import { OauthAccount } from './auth/entities/oauth-account.entity';
     ThrottlerModule.forRoot([
       {
         ttl: 60_000,
-        limit: 1000,
+        limit: 60,
       },
     ]),
     AuthModule,
@@ -68,14 +71,16 @@ import { OauthAccount } from './auth/entities/oauth-account.entity';
     TaskModule,
     CommentModule,
     AdminModule,
+    AuditLogModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, AuditLogController],
   providers: [
     AppService,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
+    AuditLogService,
   ],
 })
 export class AppModule {}
