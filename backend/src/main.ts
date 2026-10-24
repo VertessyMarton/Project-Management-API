@@ -44,19 +44,6 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
-  app.use((req, res, next) => {
-    if (req.path.startsWith('/api/')) {
-      console.log('Proxy diagnostic:', {
-        ip: req.ip,
-        remoteAddress: req.socket.remoteAddress,
-        forwardedFor: req.headers['x-forwarded-for'],
-        cfConnectingIp: req.headers['cf-connecting-ip'],
-      });
-    }
-
-    next();
-  });
-
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
