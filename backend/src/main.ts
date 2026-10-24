@@ -12,6 +12,8 @@ import helmet from 'helmet';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  app.set('trust proxy', 'loopback');
+
   const publicDirectory = join(__dirname, '..', 'public');
   const indexFile = join(publicDirectory, 'index.html');
   if (existsSync(indexFile)) {
