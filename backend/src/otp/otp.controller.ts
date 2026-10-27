@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Req, Request } from '@nestjs/common';
 import { OtpService } from './otp.service';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
@@ -37,15 +37,15 @@ export class OtpController {
   @ForgotPasswordDocs()
   @OtpLimit()
   @Post('/forgot-password')
-  forgotPassword(@Body() dto: ForgotPasswordDto) {
-    return this.otpService.forgotPassword(dto);
+  forgotPassword(@Body() dto: ForgotPasswordDto, @Request() req) {
+    return this.otpService.forgotPassword(dto, req.requestId);
   }
 
   @HttpCode(200)
   @ResetPasswordDocs()
   @OtpLimit()
   @Post('/reset-password')
-  resetPassword(@Body() dto: ResetPasswordDto) {
-    return this.otpService.resetPassword(dto);
+  resetPassword(@Body() dto: ResetPasswordDto, @Request() req) {
+    return this.otpService.resetPassword(dto, req.requestId);
   }
 }

@@ -1,15 +1,27 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, DataSource, Repository } from 'typeorm';
 import { Project } from 'src/project/entities/project.entity';
 import { AdminProjectQueryDto } from '../dto/admin.project-query.dto';
 import { getExclusiveUpperDate } from '../utils/date-range.util';
+import { AuditLogService } from 'src/audit-log/audit-log.service';
+import { AuditLog } from 'src/audit-log/entities/aduit-log.entity';
+import { AdminUserService } from './admin-user.service';
+import { AuditCategory } from 'src/audit-log/enums/log-category.enum';
+import { AuditTargetType } from 'src/audit-log/enums/log-target-type.enum';
+import { AuditOutcome } from 'src/audit-log/enums/log-outcome.enum';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class AdminProjectService {
+  private readonly logger = new Logger(AdminUserService.name);
   constructor(
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
+    @InjectRepository(AuditLog)
+    private readonly auditRepository: Repository<AuditLog>,
+    private auditService: AuditLogService,
+    private dataSource: DataSource,
   ) {}
 
   async findAllProject(
@@ -97,11 +109,31 @@ export class AdminProjectService {
     return projects;
   }
 
-  async deleteProject(projectId: number) {
-    const project = await this.projectRepository.delete(projectId);
-    if (project.affected === 0) {
-      throw new NotFoundException('Project not found');
-    }
-    return { message: 'Project deleted' };
+  async deleteProject(userId: number, actorId: number, requestId: UUID) {
+    return this.auditService.run(
+      {
+        category: AuditCategory.ADMIN,
+        action: 'admin.project.delete',
+        actorId,
+        targetType: AuditTargetType.PROJECT,
+        targetId: userId,
+        requestId,
+      },
+      async (manager, audit) => {
+        const projects = manager.getRepository(Project);
+        const project = await projects.findOne({
+          where: { id: userId },
+          lock: { mode: 'pessimistic_write' },
+        });
+
+        if (!project) {
+          throw new NotFoundException('Project not found');
+        }
+
+        audit.setMetadata({ name: project.name });
+        await projects.delete(userId);
+        return { message: 'project deleted' };
+      },
+    );
   }
 }

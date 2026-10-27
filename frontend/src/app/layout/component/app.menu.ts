@@ -60,6 +60,12 @@ export class AppMenu {
                         label: 'Comments',
                         icon: 'pi pi-fw pi-table',
                         routerLink: ['/admin/comments']
+                    },
+
+                    {
+                        label: 'Audit logs',
+                        icon: 'pi pi-fw pi-table',
+                        routerLink: ['/admin/audit-logs']
                     }
                 ]
             }

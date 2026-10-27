@@ -105,7 +105,7 @@
                                             min="1" 
                                             step="1"
                                             class="w-full"
-                                            [value]="providerIdQuery()"
+                                            [value]="providerIdQuery() ?? ''"
                                             (input)="onProviderIdSearch(providerIdInput.value, oauthUsersTable)" 
                                         />
                                     </div>

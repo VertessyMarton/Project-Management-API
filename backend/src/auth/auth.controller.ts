@@ -37,6 +37,7 @@ import {
   SwaggerOAuthLoginDocs,
   SwaggerOAuthSuccessDocs,
 } from 'src/common/decorators/swagger/oauth-docs.decorator';
+import { OAuthProvider } from './enums/oauth-provider.enum';
 
 @Controller('auth')
 export class AuthController {
@@ -49,11 +50,12 @@ export class AuthController {
   @SwaggerRegisterDocs()
   @RegisterLimit()
   @Post('register')
-  async createUser(@Body() dto: RegisterDto) {
+  async createUser(@Body() dto: RegisterDto, @Request() req) {
     const user = await this.authService.createUser(
       dto.name,
       dto.email,
       dto.password,
+      req.requestId,
     );
     return new RegisterResponseDto(user);
   }
@@ -69,6 +71,8 @@ export class AuthController {
   ): Promise<LoginResponseDto> {
     const { accessToken, refreshToken } = await this.authService.login(
       req.user,
+      req.requestId,
+      'password',
     );
 
     res.cookie('refreshToken', refreshToken, {
@@ -94,7 +98,10 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const { id, accessToken, refreshToken } =
-      await this.refreshService.refreshToken(req.cookies.refreshToken);
+      await this.refreshService.refreshToken(
+        req.cookies.refreshToken,
+        req.requestId,
+      );
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
@@ -115,7 +122,10 @@ export class AuthController {
   @RefreshLimit()
   @Post('logout')
   async logout(@Request() req, @Res({ passthrough: true }) res: Response) {
-    await this.refreshService.revokeRefreshToken(req.cookies.refreshToken);
+    await this.refreshService.revokeRefreshToken(
+      req.cookies.refreshToken,
+      req.requestId,
+    );
 
     res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
 
@@ -139,7 +149,11 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   @UseFilters(OAuthFailureRedirectFilter)
   async googleCallback(@Request() req, @Res() res: Response) {
-    const { refreshToken } = await this.authService.login(req.user);
+    const { refreshToken } = await this.authService.login(
+      req.user,
+      req.requestId,
+      OAuthProvider.GOOGLE,
+    );
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
@@ -162,7 +176,11 @@ export class AuthController {
   @UseGuards(GitHubAuthGuard)
   @UseFilters(OAuthFailureRedirectFilter)
   async githubCallback(@Request() req, @Res() res: Response) {
-    const { refreshToken } = await this.authService.login(req.user);
+    const { refreshToken } = await this.authService.login(
+      req.user,
+      req.requestId,
+      OAuthProvider.GITHUB,
+    );
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
@@ -185,7 +203,11 @@ export class AuthController {
   @UseGuards(MicrosoftAuthGuard)
   @UseFilters(OAuthFailureRedirectFilter)
   async microsoftCallback(@Request() req, @Res() res: Response) {
-    const { refreshToken } = await this.authService.login(req.user);
+    const { refreshToken } = await this.authService.login(
+      req.user,
+      req.requestId,
+      OAuthProvider.MICROSOFT,
+    );
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,

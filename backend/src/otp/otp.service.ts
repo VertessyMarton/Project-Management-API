@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Otp } from './entities/otp.entity';
-import { MoreThan, Repository } from 'typeorm';
+import { DataSource, MoreThan, Repository } from 'typeorm';
 import * as crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { OtpEnum } from './enums/otp.enum';
@@ -18,10 +18,14 @@ import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { resetPasswordEmailTemplate } from 'src/email/templates/reset-password-email.template';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { randomUUID } from 'crypto';
+import { randomUUID, UUID } from 'crypto';
 import { RefreshToken } from 'src/auth/entities/refresh-token.entity';
 import { RefreshTokenEnum } from 'src/auth/enums/refresh-token.enum';
 import { UserStatusEnum } from 'src/user/enums/user-status.enum';
+import { AuditLogService } from 'src/audit-log/audit-log.service';
+import { AuditCategory } from 'src/audit-log/enums/log-category.enum';
+import { AuditTargetType } from 'src/audit-log/enums/log-target-type.enum';
+import { AuditOutcome } from 'src/audit-log/enums/log-outcome.enum';
 
 @Injectable()
 export class OtpService {
@@ -33,6 +37,8 @@ export class OtpService {
     @InjectRepository(RefreshToken)
     private refreshRepository: Repository<RefreshToken>,
     private emailService: EmailService,
+    private auditService: AuditLogService,
+    private dataSource: DataSource,
   ) {}
 
   async generateOtp(user: User, type: OtpEnum): Promise<string> {
@@ -138,7 +144,7 @@ export class OtpService {
     return { message };
   }
 
-  async forgotPassword(dto: ForgotPasswordDto) {
+  async forgotPassword(dto: ForgotPasswordDto, requestId: UUID) {
     const message = 'If an account exists, a password reset link has been sent';
     const secret = crypto.randomBytes(32).toString('hex');
     const selector = randomUUID();
@@ -159,17 +165,35 @@ export class OtpService {
       };
     }
 
-    await this.otpRepository.delete({
-      user: { id: record.id },
-      type: OtpEnum.RESET_PASSWORD,
-    });
+    await this.dataSource.transaction(async (manager) => {
+      await manager.getRepository(Otp).delete({
+        user: { id: record.id },
+        type: OtpEnum.RESET_PASSWORD,
+      });
 
-    await this.otpRepository.save({
-      selector,
-      user: { id: record.id },
-      otpHash: await bcrypt.hash(secret, 12),
-      type: OtpEnum.RESET_PASSWORD,
-      expiresAt,
+      await manager.getRepository(Otp).save({
+        selector,
+        user: { id: record.id },
+        otpHash: await bcrypt.hash(secret, 12),
+        type: OtpEnum.RESET_PASSWORD,
+        expiresAt,
+      });
+
+      await this.auditService.record(
+        {
+          category: AuditCategory.SECURITY,
+          action: 'security.password.forgot',
+          actorId: record.id,
+          targetType: AuditTargetType.USER,
+          targetId: record.id,
+          outcome: AuditOutcome.SUCCESS,
+          metadata: {
+            newOtpId: selector,
+          },
+          requestId,
+        },
+        manager,
+      );
     });
 
     try {
@@ -192,44 +216,60 @@ export class OtpService {
     };
   }
 
-  async resetPassword(dto: ResetPasswordDto) {
+  async resetPassword(dto: ResetPasswordDto, requestId: UUID) {
     const [selector, secret] = dto.token.split('.');
 
-    const record = await this.otpRepository.findOne({
-      where: {
-        selector,
-        type: OtpEnum.RESET_PASSWORD,
-        expiresAt: MoreThan(new Date()),
-      },
-      relations: {
-        user: true,
-      },
-    });
+    await this.dataSource.transaction(async (manager) => {
+      const record = await manager.getRepository(Otp).findOne({
+        where: {
+          selector,
+          type: OtpEnum.RESET_PASSWORD,
+          expiresAt: MoreThan(new Date()),
+        },
+        relations: {
+          user: true,
+        },
+      });
 
-    if (!record) {
-      throw new UnauthorizedException('Token not found');
-    }
+      if (!record) {
+        throw new UnauthorizedException('Token not found');
+      }
 
-    const valid = await bcrypt.compare(secret, record.otpHash);
+      const valid = await bcrypt.compare(secret, record.otpHash);
 
-    if (!valid) {
-      throw new UnauthorizedException('Token is invalid');
-    }
+      if (!valid) {
+        throw new UnauthorizedException('Token is invalid');
+      }
 
-    await this.userRepository.update(record.user.id, {
-      password: await bcrypt.hash(dto.newPassword, 12),
-    });
+      await manager.getRepository(User).update(record.userId, {
+        password: await bcrypt.hash(dto.newPassword, 12),
+      });
 
-    await this.otpRepository.delete({ id: record.id });
+      await manager.getRepository(Otp).delete({ id: record.id });
 
-    await this.refreshRepository.update(
-      { user: { id: record.user.id } },
-      {
+      await manager.getRepository(RefreshToken).update(record.userId, {
         revoked: true,
+        revokedAt: new Date(),
         revokedReason: RefreshTokenEnum.RESET_PASSWORD,
-      },
-    );
+      });
 
-    return { message: 'Password successfully changed' };
+      await this.auditService.record(
+        {
+          category: AuditCategory.SECURITY,
+          action: 'security.password.reset',
+          actorId: record.userId,
+          targetType: AuditTargetType.USER,
+          targetId: record.userId,
+          outcome: AuditOutcome.SUCCESS,
+          metadata: {
+            sessionsRevoked: true,
+          },
+          requestId,
+        },
+        manager,
+      );
+
+      return { message: 'Password successfully changed' };
+    });
   }
 }

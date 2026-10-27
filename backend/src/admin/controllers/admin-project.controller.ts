@@ -5,6 +5,7 @@ import {
   Param,
   ParseIntPipe,
   Query,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
@@ -40,7 +41,14 @@ export class AdminProjectController {
   @AdminDeleteProjectDocs()
   @Roles('admin')
   @Delete('projects/:projectId')
-  async deleteProject(@Param('projectId', ParseIntPipe) projectId: number) {
-    return this.adminService.deleteProject(projectId);
+  async deleteProject(
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Request() req,
+  ) {
+    return this.adminService.deleteProject(
+      projectId,
+      req.user.id,
+      req.requestId,
+    );
   }
 }

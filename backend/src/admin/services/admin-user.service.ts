@@ -1,15 +1,24 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 import { AdminUserQueryDto } from '../dto/admin.user-query.dto';
 import { UpdateUserRoleDto } from '../dto/update-user-role.dto';
+import { AuditLogService } from 'src/audit-log/audit-log.service';
+import { AuditCategory } from 'src/audit-log/enums/log-category.enum';
+import { AuditTargetType } from 'src/audit-log/enums/log-target-type.enum';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class AdminUserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private auditService: AuditLogService,
   ) {}
 
   async findAllUser(query: AdminUserQueryDto = new AdminUserQueryDto()) {
@@ -62,19 +71,75 @@ export class AdminUserService {
     return user;
   }
 
-  async setUserRole(userId: number, dto: UpdateUserRoleDto) {
-    const user = await this.userRepository.update(userId, { role: dto.role });
-    if (user.affected === 0) {
-      throw new NotFoundException('User not found');
-    }
-    return await this.userRepository.findOne({ where: { id: userId } });
+  async setUserRole(
+    userId: number,
+    dto: UpdateUserRoleDto,
+    actorId: number,
+    requestId: UUID,
+  ) {
+    return this.auditService.run(
+      {
+        category: AuditCategory.ADMIN,
+        action: 'admin.user.changeRole',
+        actorId,
+        targetType: AuditTargetType.USER,
+        targetId: userId,
+        requestId,
+      },
+      async (manager, audit) => {
+        const users = manager.getRepository(User);
+        const user = await users.findOne({
+          where: { id: userId },
+          lock: { mode: 'pessimistic_write' },
+        });
+
+        if (!user) {
+          throw new NotFoundException('User not found');
+        }
+        if (user.role === dto.role) {
+          throw new NotFoundException('User not found');
+        }
+
+        audit.setMetadata({
+          role: {
+            from: user.role,
+            to: dto.role,
+          },
+        });
+        await users.update(userId, { role: dto.role });
+        return {
+          ...user,
+          role: dto.role,
+        };
+      },
+    );
   }
 
-  async deleteUser(userId: number) {
-    const user = await this.userRepository.delete(userId);
-    if (user.affected === 0) {
-      throw new NotFoundException('User not found');
-    }
-    return { message: 'user deleted' };
+  async deleteUser(userId: number, actorId: number, requestId: UUID) {
+    return this.auditService.run(
+      {
+        category: AuditCategory.ADMIN,
+        action: 'admin.user.delete',
+        actorId,
+        targetType: AuditTargetType.USER,
+        targetId: userId,
+        requestId,
+      },
+      async (manager, audit) => {
+        const users = manager.getRepository(User);
+        const user = await users.findOne({
+          where: { id: userId },
+          lock: { mode: 'pessimistic_write' },
+        });
+
+        if (!user) {
+          throw new NotFoundException('User not found');
+        }
+
+        audit.setMetadata({ name: user.name });
+        await users.delete(userId);
+        return { message: 'user deleted' };
+      },
+    );
   }
 }

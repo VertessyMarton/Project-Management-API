@@ -10,6 +10,10 @@ import { AuthService } from './auth.service';
 import { UserStatusEnum } from 'src/user/enums/user-status.enum';
 
 describe('AuthService', () => {
+  const requestId = '00000000-0000-4000-8000-000000000001' as const;
+  const manager = {};
+  let auditService: { record: jest.Mock };
+  let dataSource: { transaction: jest.Mock };
   let service: AuthService;
   let userRepository: {
     findOne: jest.Mock;
@@ -46,12 +50,19 @@ describe('AuthService', () => {
       createRefreshToken: jest.fn(),
     };
 
+    auditService = { record: jest.fn().mockResolvedValue({}) };
+    dataSource = {
+      transaction: jest.fn(async (callback) => callback(manager)),
+    };
+
     service = new AuthService(
       userRepository as any,
       jwtService as any,
       otpService as any,
       emailService as any,
       refreshService as any,
+      dataSource as any,
+      auditService as any,
     );
   });
 
@@ -59,7 +70,7 @@ describe('AuthService', () => {
     userRepository.findOne.mockResolvedValue({ id: 1 });
 
     await expect(
-      service.createUser('Test User', 'test@example.com', 'secret'),
+      service.createUser('Test User', 'test@example.com', 'secret', requestId),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(userRepository.save).not.toHaveBeenCalled();
   });
@@ -76,7 +87,7 @@ describe('AuthService', () => {
     otpService.generateOtp.mockResolvedValue('123456');
 
     await expect(
-      service.createUser('Test User', 'test@example.com', 'secret'),
+      service.createUser('Test User', 'test@example.com', 'secret', requestId),
     ).resolves.toBe(user);
 
     expect(userRepository.save).toHaveBeenCalledWith(
@@ -88,6 +99,15 @@ describe('AuthService', () => {
     );
     expect(otpService.generateOtp).toHaveBeenCalledWith(user, OtpEnum.OTP);
     expect(emailService.sendEmail).toHaveBeenCalled();
+    expect(auditService.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'security.register',
+        targetId: user.id,
+        outcome: 'success',
+        requestId,
+      }),
+      manager,
+    );
   });
 
   it('returns a user without password when credentials are valid', async () => {
@@ -110,12 +130,16 @@ describe('AuthService', () => {
 
   it('does not log in unverified users', async () => {
     await expect(
-      service.login({
-        id: 1,
-        email: 'test@example.com',
-        role: UserRoleEnum.USER,
-        status: UserStatusEnum.UNVERIFIED,
-      }),
+      service.login(
+        {
+          id: 1,
+          email: 'test@example.com',
+          role: UserRoleEnum.USER,
+          status: UserStatusEnum.UNVERIFIED,
+        },
+        requestId,
+        'password',
+      ),
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
@@ -129,12 +153,22 @@ describe('AuthService', () => {
     jwtService.sign.mockReturnValue('access-token');
     refreshService.createRefreshToken.mockResolvedValue('refresh-token');
 
-    await expect(service.login(user)).resolves.toEqual({
+    await expect(service.login(user, requestId, 'password')).resolves.toEqual({
       user,
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
     });
 
+    expect(auditService.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'security.login',
+        targetId: user.id,
+        outcome: 'success',
+        requestId,
+        metadata: { method: 'password' },
+      }),
+      manager,
+    );
     expect(jwtService.sign).toHaveBeenCalledWith({
       sub: user.id,
       role: user.role,

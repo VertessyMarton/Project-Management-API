@@ -19,10 +19,20 @@ import { AdminStatsService } from './services/admin-stats.service';
 import { AdminOauthController } from './controllers/admin-oauth.controller';
 import { AdminOauthService } from './services/admin-oauth.service';
 import { OauthAccount } from 'src/auth/entities/oauth-account.entity';
+import { AuditLog } from 'src/audit-log/entities/aduit-log.entity';
+import { AuditLogModule } from 'src/audit-log/audit-log.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Project, Task, Comment, OauthAccount]),
+    AuditLogModule,
+    TypeOrmModule.forFeature([
+      User,
+      Project,
+      Task,
+      Comment,
+      OauthAccount,
+      AuditLog,
+    ]),
   ],
   controllers: [
     AdminUserController,

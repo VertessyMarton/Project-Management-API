@@ -8,6 +8,7 @@ import { existsSync } from 'node:fs';
 import { join, extname } from 'node:path';
 import type { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
+import { requestIdMiddleware } from './common/middlewares/request-id.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -43,6 +44,8 @@ async function bootstrap() {
   });
 
   app.use(cookieParser());
+
+  app.use(requestIdMiddleware);
 
   app.useGlobalPipes(
     new ValidationPipe({

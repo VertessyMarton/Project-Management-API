@@ -11,6 +11,7 @@ import { AdminComments } from './app/features/admin/components/comments/comments
 import { adminGuard } from './app/core/guards/admin.guard';
 import { authGuard } from './app/core/guards/auth.guard';
 import { AdminOauthUsers } from './app/features/admin/components/oauth/oauth';
+import { AdminAuditLogs } from './app/features/admin/components/audit-logs/audit-logs';
 
 export const appRoutes: Routes = [
     {
@@ -49,7 +50,8 @@ export const appRoutes: Routes = [
             { path: 'oauth', component: AdminOauthUsers },
             { path: 'projects', component: AdminProjects },
             { path: 'tasks', component: AdminTasks },
-            { path: 'comments', component: AdminComments }
+            { path: 'comments', component: AdminComments },
+            { path: 'audit-logs', component: AdminAuditLogs }
         ]
     }
 ];

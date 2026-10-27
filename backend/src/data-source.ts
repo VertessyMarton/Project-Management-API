@@ -10,6 +10,7 @@ import { Task } from './task/entities/task.entity';
 import { Comment } from './comment/entities/comment.entity';
 import { RefreshToken } from './auth/entities/refresh-token.entity';
 import { OauthAccount } from './auth/entities/oauth-account.entity';
+import { AuditLog } from './audit-log/entities/aduit-log.entity';
 
 const getEnv = (name: string): string => {
   const value = process.env[name];
@@ -44,6 +45,7 @@ export default new DataSource({
     Comment,
     RefreshToken,
     OauthAccount,
+    AuditLog,
   ],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   synchronize: false,

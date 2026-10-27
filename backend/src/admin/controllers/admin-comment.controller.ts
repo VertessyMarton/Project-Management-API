@@ -5,6 +5,7 @@ import {
   Param,
   ParseIntPipe,
   Query,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
@@ -32,7 +33,14 @@ export class AdminCommentController {
   @AdminDeleteCommentDocs()
   @Roles('admin')
   @Delete('comments/:commentId')
-  async deleteComment(@Param('commentId', ParseIntPipe) commentId: number) {
-    return this.adminService.deleteComment(commentId);
+  async deleteComment(
+    @Param('commentId', ParseIntPipe) commentId: number,
+    @Request() req,
+  ) {
+    return this.adminService.deleteComment(
+      commentId,
+      req.user.id,
+      req.requestId,
+    );
   }
 }

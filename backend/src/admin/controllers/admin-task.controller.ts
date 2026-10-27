@@ -5,6 +5,7 @@ import {
   Param,
   ParseIntPipe,
   Query,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
@@ -40,7 +41,10 @@ export class AdminTaskController {
   @AdminDeleteTaskDocs()
   @Roles('admin')
   @Delete('tasks/:taskId')
-  async deleteTask(@Param('taskId', ParseIntPipe) taskId: number) {
-    return this.adminService.deleteTask(taskId);
+  async deleteTask(
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @Request() req,
+  ) {
+    return this.adminService.deleteTask(taskId, req.user.id, req.requestId);
   }
 }

@@ -2,11 +2,10 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { OtpService } from 'src/otp/otp.service';
@@ -16,7 +15,12 @@ import { verificationEmailTemplate } from 'src/email/templates/verification-emai
 import { ValidateUserDto } from './dto/validate-user.dto';
 import { AuthenticatedUser, LoginResult } from './types/login-result.type';
 import { RefreshTokenService } from './refresh-token.service';
-import { randomUUID } from 'crypto';
+import { randomUUID, UUID } from 'crypto';
+import { AuditLogService } from 'src/audit-log/audit-log.service';
+import { AuditCategory } from 'src/audit-log/enums/log-category.enum';
+import { AuditTargetType } from 'src/audit-log/enums/log-target-type.enum';
+import { AuditOutcome } from 'src/audit-log/enums/log-outcome.enum';
+import { OAuthProvider } from './enums/oauth-provider.enum';
 
 @Injectable()
 export class AuthService {
@@ -27,12 +31,15 @@ export class AuthService {
     private otpService: OtpService,
     private emailService: EmailService,
     private refreshService: RefreshTokenService,
+    private readonly dataSource: DataSource,
+    private readonly auditService: AuditLogService,
   ) {}
 
   async createUser(
     name: string,
     email: string,
     password: string,
+    requestId: UUID,
   ): Promise<User> {
     const isUnique = await this.userRepository.findOne({
       where: { email: email },
@@ -50,6 +57,25 @@ export class AuthService {
     });
 
     const otp = await this.otpService.generateOtp(user, OtpEnum.OTP);
+
+    await this.dataSource.transaction(async (manager) => {
+      await this.auditService.record(
+        {
+          category: AuditCategory.SECURITY,
+          action: 'security.register',
+          actorId: null,
+          targetType: AuditTargetType.USER,
+          targetId: user.id,
+          outcome: AuditOutcome.SUCCESS,
+          metadata: {
+            method: 'password',
+            emailVerified: false,
+          },
+          requestId,
+        },
+        manager,
+      );
+    });
 
     this.emailService
       .sendEmail(
@@ -83,7 +109,11 @@ export class AuthService {
     }
   }
 
-  async login(user: AuthenticatedUser): Promise<LoginResult> {
+  async login(
+    user: AuthenticatedUser,
+    requestId: UUID,
+    method: OAuthProvider | 'password',
+  ): Promise<LoginResult> {
     if (user.status === 'unverified') {
       throw new ForbiddenException({
         code: 'EMAIL_NOT_VERIFIED',
@@ -99,6 +129,26 @@ export class AuthService {
       user.id,
       familyId,
     );
+
+    await this.dataSource.transaction(async (manager) => {
+      await this.auditService.record(
+        {
+          category: AuditCategory.SECURITY,
+          action: 'security.login',
+          actorId: null,
+          targetType: AuditTargetType.USER,
+          targetId: user.id,
+          outcome: AuditOutcome.SUCCESS,
+          metadata: {
+            method: method === 'password' ? 'password' : 'oauth',
+            ...(method !== 'password' && { provider: method }),
+          },
+          requestId,
+        },
+        manager,
+      );
+    });
+
     return {
       user,
       accessToken,

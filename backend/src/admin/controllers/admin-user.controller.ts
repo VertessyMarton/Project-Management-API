@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Patch,
   Query,
+  Request,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -50,14 +51,23 @@ export class AdminUserController {
   async setUserRole(
     @Param('userId', ParseIntPipe) userId: number,
     @Body() dto: UpdateUserRoleDto,
+    @Request() req,
   ) {
-    return this.adminService.setUserRole(userId, dto);
+    return this.adminService.setUserRole(
+      userId,
+      dto,
+      req.user.id,
+      req.requestId,
+    );
   }
 
   @AdminDeleteUserDocs()
   @Roles('admin')
   @Delete(':userId')
-  async deleteuser(@Param('userId', ParseIntPipe) userId: number) {
-    return this.adminService.deleteUser(userId);
+  async deleteuser(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Request() req,
+  ) {
+    return this.adminService.deleteUser(userId, req.user.id, req.requestId);
   }
 }

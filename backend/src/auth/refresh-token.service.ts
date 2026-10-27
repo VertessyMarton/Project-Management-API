@@ -1,11 +1,15 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
-import { randomBytes, randomUUID } from 'crypto';
+import { randomBytes, randomUUID, UUID } from 'crypto';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { RefreshTokenEnum } from './enums/refresh-token.enum';
+import { AuditCategory } from 'src/audit-log/enums/log-category.enum';
+import { AuditTargetType } from 'src/audit-log/enums/log-target-type.enum';
+import { AuditOutcome } from 'src/audit-log/enums/log-outcome.enum';
+import { AuditLogService } from 'src/audit-log/audit-log.service';
 
 @Injectable()
 export class RefreshTokenService {
@@ -13,6 +17,8 @@ export class RefreshTokenService {
     @InjectRepository(RefreshToken)
     private refreshRepository: Repository<RefreshToken>,
     private jwtService: JwtService,
+    private auditService: AuditLogService,
+    private dataSource: DataSource,
   ) {}
 
   async createRefreshToken(userId: number, familyId: string) {
@@ -67,7 +73,7 @@ export class RefreshTokenService {
     }
   }
 
-  async revokeRefreshToken(oldRefreshToken: string) {
+  async revokeRefreshToken(oldRefreshToken: string, requestId: UUID) {
     const [tokenId, secret] = oldRefreshToken.split('.');
 
     const definedToken = await this.isTokenDefined(oldRefreshToken);
@@ -78,28 +84,73 @@ export class RefreshTokenService {
 
     await this.isTokenValid(oldRefreshToken, definedToken);
 
-    await this.refreshRepository.update(tokenId, {
-      revoked: true,
-      revokedAt: new Date(),
-      revokedReason: RefreshTokenEnum.LOGOUT,
+    await this.dataSource.transaction(async (manager) => {
+      await manager.getRepository(RefreshToken).update(tokenId, {
+        revoked: true,
+        revokedAt: new Date(),
+        revokedReason: RefreshTokenEnum.LOGOUT,
+      });
+
+      await this.auditService.record(
+        {
+          category: AuditCategory.SECURITY,
+          action: 'security.refresh_token.logout',
+          actorId: definedToken.userId,
+          targetType: AuditTargetType.USER,
+          targetId: definedToken.userId,
+          outcome: AuditOutcome.SUCCESS,
+          metadata: {
+            tokenId: definedToken.userId,
+            familyId: definedToken.familyId,
+            reason: 'LOGOUT',
+            familyRevoked: true,
+          },
+          requestId,
+        },
+        manager,
+      );
     });
   }
 
-  async rotateRefreshToken(oldRefreshToken: string, userId: number) {
+  async rotateRefreshToken(
+    oldRefreshToken: string,
+    userId: number,
+    requestId: UUID,
+  ) {
     const [tokenId, ,] = oldRefreshToken.split('.');
 
     const definedToken = await this.isTokenDefined(oldRefreshToken);
 
     if (definedToken.revoked) {
       if (definedToken.revokedReason === RefreshTokenEnum.ROTATED) {
-        await this.refreshRepository.update(
-          { familyId: definedToken.familyId },
-          {
-            revoked: true,
-            revokedAt: new Date(),
-            revokedReason: RefreshTokenEnum.REUSE_DETECTED,
-          },
-        );
+        await this.dataSource.transaction(async (manager) => {
+          await manager.getRepository(RefreshToken).update(
+            { familyId: definedToken.familyId },
+            {
+              revoked: true,
+              revokedAt: new Date(),
+              revokedReason: RefreshTokenEnum.REUSE_DETECTED,
+            },
+          );
+
+          await this.auditService.record(
+            {
+              category: AuditCategory.SECURITY,
+              action: 'security.refresh_token.reuse_detected',
+              actorId: null,
+              targetType: AuditTargetType.USER,
+              targetId: userId,
+              outcome: AuditOutcome.DENIED,
+              metadata: {
+                familyId: definedToken.familyId,
+                reason: 'TOKEN_REUSE',
+                familyRevoked: true,
+              },
+              requestId,
+            },
+            manager,
+          );
+        });
       }
       throw new UnauthorizedException('Invalid token');
     }
@@ -122,7 +173,7 @@ export class RefreshTokenService {
     };
   }
 
-  async refreshToken(oldRefreshToken: string) {
+  async refreshToken(oldRefreshToken: string, requestId: UUID) {
     if (!oldRefreshToken) {
       throw new UnauthorizedException('Invalid token');
     }
@@ -142,6 +193,7 @@ export class RefreshTokenService {
     const rotate = await this.rotateRefreshToken(
       oldRefreshToken,
       record.user.id,
+      requestId,
     );
 
     const payload = { sub: record?.user.id, role: record?.user.role };

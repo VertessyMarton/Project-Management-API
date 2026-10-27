@@ -37,7 +37,10 @@ describe('OtpService', () => {
     service = new OtpService(
       userRepository as any,
       otpRepository as any,
+      {} as any, // RefreshToken repository
       emailService as any,
+      { record: jest.fn() } as any,
+      {} as any, // DataSource (unused by these verification tests)
     );
   });
 
@@ -61,9 +64,9 @@ describe('OtpService', () => {
   it('rejects expired or missing verification codes', async () => {
     otpRepository.findOne.mockResolvedValue(null);
 
-    await expect(service.validateOtp(1, '123456')).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
+    await expect(
+      service.validateOtp(1, '123456', OtpEnum.OTP),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('verifies an unverified user and removes their otp', async () => {

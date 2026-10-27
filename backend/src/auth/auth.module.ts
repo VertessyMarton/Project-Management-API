@@ -18,11 +18,14 @@ import { OAuthService } from './oauth.service';
 import { GoogleStrategy } from './strategies/google-auth.strategy';
 import { GithubStrategy } from './strategies/github-auth.strategy';
 import { MicrosoftStrategy } from './strategies/microsoft-auth.strategy';
+import { AuditLogModule } from 'src/audit-log/audit-log.module';
+import { AuditLog } from 'src/audit-log/entities/aduit-log.entity';
 
 @Module({
   imports: [
+    AuditLogModule,
     PassportModule,
-    TypeOrmModule.forFeature([User, RefreshToken, OauthAccount]),
+    TypeOrmModule.forFeature([User, RefreshToken, OauthAccount, AuditLog]),
     JwtModule.registerAsync(jwtConfig.asProvider()),
     ConfigModule.forFeature(jwtConfig),
     EmailModule,

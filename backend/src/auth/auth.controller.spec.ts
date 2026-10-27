@@ -2,6 +2,7 @@ import { UserRoleEnum } from '../user/enums/user-role.enum';
 import { AuthController } from './auth.controller';
 
 describe('AuthController', () => {
+  const requestId = '00000000-0000-4000-8000-000000000001';
   let controller: AuthController;
   let authService: {
     createUser: jest.Mock;
@@ -26,7 +27,11 @@ describe('AuthController', () => {
       cookie: jest.fn(),
     };
 
-    controller = new AuthController(authService as any, refreshService as any);
+    controller = new AuthController(
+      authService as any,
+      refreshService as any,
+      {} as any,
+    );
   });
 
   it('registers a user and returns a safe response dto', async () => {
@@ -42,11 +47,14 @@ describe('AuthController', () => {
     });
 
     await expect(
-      controller.createUser({
-        name: 'Test User',
-        email: 'test@example.com',
-        password: 'secret',
-      }),
+      controller.createUser(
+        {
+          name: 'Test User',
+          email: 'test@example.com',
+          password: 'secret',
+        },
+        { requestId },
+      ),
     ).resolves.toEqual({
       id: 1,
       name: 'Test User',
@@ -69,11 +77,13 @@ describe('AuthController', () => {
       refreshToken: 'refresh-token',
     });
 
-    await expect(controller.login({ user }, response as any)).resolves.toEqual({
+    await expect(
+      controller.login({ user, requestId }, response as any),
+    ).resolves.toEqual({
       user,
       accessToken: 'access-token',
     });
-    expect(authService.login).toHaveBeenCalledWith(user);
+    expect(authService.login).toHaveBeenCalledWith(user, requestId, 'password');
     expect(response.cookie).toHaveBeenCalledWith(
       'refreshToken',
       'refresh-token',
@@ -96,12 +106,14 @@ describe('AuthController', () => {
       controller.refreshToken(
         {
           cookies: { refreshToken: 'old-refresh-token' },
+          requestId,
         },
         response as any,
       ),
     ).resolves.toEqual({ id: 1, accessToken: 'new-access-token' });
     expect(refreshService.refreshToken).toHaveBeenCalledWith(
       'old-refresh-token',
+      requestId,
     );
     expect(response.cookie).toHaveBeenCalledWith(
       'refreshToken',

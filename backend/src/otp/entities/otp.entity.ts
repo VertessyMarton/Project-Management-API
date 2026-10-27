@@ -24,6 +24,9 @@ export class Otp {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
+  @Column({ name: 'user_id' })
+  userId: number;
+
   @Column({ name: 'otp_hash' })
   otpHash: string;
 

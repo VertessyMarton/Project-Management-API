@@ -1,16 +1,28 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from 'src/task/entities/task.entity';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, DataSource, Repository } from 'typeorm';
 import { AdminTaskQueryDto } from '../dto/admin.task-query.dto';
 import { getExclusiveUpperDate } from '../utils/date-range.util';
 import { TaskStatusEnum } from 'src/task/enums/task-status.enum';
+import { AdminUserService } from './admin-user.service';
+import { AuditLog } from 'src/audit-log/entities/aduit-log.entity';
+import { AuditLogService } from 'src/audit-log/audit-log.service';
+import { AuditCategory } from 'src/audit-log/enums/log-category.enum';
+import { AuditTargetType } from 'src/audit-log/enums/log-target-type.enum';
+import { AuditOutcome } from 'src/audit-log/enums/log-outcome.enum';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class AdminTaskService {
+  private readonly logger = new Logger(AdminUserService.name);
   constructor(
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
+    @InjectRepository(AuditLog)
+    private readonly auditRepository: Repository<AuditLog>,
+    private auditService: AuditLogService,
+    private dataSource: DataSource,
   ) {}
 
   async findAllTask(query: AdminTaskQueryDto = new AdminTaskQueryDto()) {
@@ -193,11 +205,31 @@ export class AdminTaskService {
     return task;
   }
 
-  async deleteTask(taskId: number) {
-    const task = await this.taskRepository.delete(taskId);
-    if (task.affected === 0) {
-      throw new NotFoundException('Task not found');
-    }
-    return { message: 'Task deleted' };
+  async deleteTask(userId: number, actorId: number, requestId: UUID) {
+    return this.auditService.run(
+      {
+        category: AuditCategory.ADMIN,
+        action: 'admin.task.delete',
+        actorId,
+        targetType: AuditTargetType.TASK,
+        targetId: userId,
+        requestId,
+      },
+      async (manager, audit) => {
+        const tasks = manager.getRepository(Task);
+        const task = await tasks.findOne({
+          where: { id: userId },
+          lock: { mode: 'pessimistic_write' },
+        });
+
+        if (!task) {
+          throw new NotFoundException('Task not found');
+        }
+
+        audit.setMetadata({ name: task.title, projectId: task.projectId });
+        await tasks.delete(userId);
+        return { message: 'task deleted' };
+      },
+    );
   }
 }

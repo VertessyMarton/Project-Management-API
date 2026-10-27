@@ -1,15 +1,27 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, DataSource, Repository } from 'typeorm';
 import { Comment } from 'src/comment/entities/comment.entity';
 import { AdminCommentQueryDto } from '../dto/admin.comment-query.dto';
 import { getExclusiveUpperDate } from '../utils/date-range.util';
+import { AdminUserService } from './admin-user.service';
+import { AuditLog } from 'src/audit-log/entities/aduit-log.entity';
+import { AuditLogService } from 'src/audit-log/audit-log.service';
+import { AuditCategory } from 'src/audit-log/enums/log-category.enum';
+import { AuditTargetType } from 'src/audit-log/enums/log-target-type.enum';
+import { AuditOutcome } from 'src/audit-log/enums/log-outcome.enum';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class AdminCommentService {
+  private readonly logger = new Logger(AdminUserService.name);
   constructor(
     @InjectRepository(Comment)
     private readonly commentRepository: Repository<Comment>,
+    @InjectRepository(AuditLog)
+    private readonly auditRepository: Repository<AuditLog>,
+    private auditService: AuditLogService,
+    private dataSource: DataSource,
   ) {}
 
   async findAllComment(
@@ -126,11 +138,31 @@ export class AdminCommentService {
     };
   }
 
-  async deleteComment(commentId: number) {
-    const comment = await this.commentRepository.delete(commentId);
-    if (comment.affected === 0) {
-      throw new NotFoundException('Comment not found');
-    }
-    return { message: 'Comment deleted' };
+  async deleteComment(userId: number, actorId: number, requestId: UUID) {
+    return this.auditService.run(
+      {
+        category: AuditCategory.ADMIN,
+        action: 'admin.comment.delete',
+        actorId,
+        targetType: AuditTargetType.COMMENT,
+        targetId: userId,
+        requestId,
+      },
+      async (manager, audit) => {
+        const comments = manager.getRepository(Comment);
+        const comment = await comments.findOne({
+          where: { id: userId },
+          lock: { mode: 'pessimistic_write' },
+        });
+
+        if (!comment) {
+          throw new NotFoundException('Comment not found');
+        }
+
+        audit.setMetadata({ name: comment.content, taskId: comment.taskId });
+        await comments.delete(userId);
+        return { message: 'comment deleted' };
+      },
+    );
   }
 }
