@@ -1,3 +1,4 @@
+import { requestIdMiddleware } from '../src/common/middlewares/request-id.middleware';
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
@@ -36,6 +37,7 @@ describe('Auth (e2e)', () => {
 
     userRepository = moduleRef.get<Repository<User>>(getRepositoryToken(User));
 
+    app.use(requestIdMiddleware);
     await app.init();
   });
 
