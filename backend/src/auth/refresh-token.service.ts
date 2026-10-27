@@ -74,6 +74,10 @@ export class RefreshTokenService {
   }
 
   async revokeRefreshToken(oldRefreshToken: string, requestId: UUID) {
+    if (!oldRefreshToken) {
+      throw new UnauthorizedException('No token provided');
+    }
+
     const [tokenId, secret] = oldRefreshToken.split('.');
 
     const definedToken = await this.isTokenDefined(oldRefreshToken);
