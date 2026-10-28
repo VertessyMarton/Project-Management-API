@@ -17,7 +17,19 @@ async function bootstrap() {
 
   app.getHttpAdapter().getInstance().disable('x-powered-by');
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          imgSrc: [
+            "'self'",
+            'data:',
+            'https://primefaces.org/cdn/primeng/images/favicon.png',
+          ],
+        },
+      },
+    }),
+  );
 
   const publicDirectory = join(__dirname, '..', 'public');
   const indexFile = join(publicDirectory, 'index.html');
