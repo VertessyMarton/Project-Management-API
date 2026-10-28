@@ -8,7 +8,6 @@ import {
   Delete,
   Request,
   UseGuards,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -27,6 +26,7 @@ import {
   MutationLimit,
   ReadLimit,
 } from 'src/common/decorators/rate-limit.decorator';
+import { ParseIdPipe } from 'src/common/pipes/parse-id.pipe';
 
 @UseGuards(JwtAuthGuard, ProjectRolesGuard)
 @Controller('projects/:projectId')
@@ -39,8 +39,8 @@ export class CommentController {
   @Post('/tasks/:taskId/comments')
   async createComment(
     @Request() req,
-    @Param('projectId', ParseIntPipe) projectId: number,
-    @Param('taskId', ParseIntPipe) taskId: number,
+    @Param('projectId', ParseIdPipe) projectId: number,
+    @Param('taskId', ParseIdPipe) taskId: number,
     @Body() dto: CreateCommentDto,
   ) {
     return await this.commentService.createComment(
@@ -56,8 +56,8 @@ export class CommentController {
   @ReadLimit()
   @Get('/tasks/:taskId/comments')
   async findAllComment(
-    @Param('taskId', ParseIntPipe) taskId: number,
-    @Param('projectId', ParseIntPipe) projectId: number,
+    @Param('taskId', ParseIdPipe) taskId: number,
+    @Param('projectId', ParseIdPipe) projectId: number,
   ) {
     return await this.commentService.findAllComment(taskId, projectId);
   }
@@ -67,9 +67,9 @@ export class CommentController {
   @ReadLimit()
   @Get('/tasks/:taskId/comments/:commentId')
   async findOneComment(
-    @Param('commentId', ParseIntPipe) commentId: number,
-    @Param('taskId', ParseIntPipe) taskId: number,
-    @Param('projectId', ParseIntPipe) projectId: number,
+    @Param('commentId', ParseIdPipe) commentId: number,
+    @Param('taskId', ParseIdPipe) taskId: number,
+    @Param('projectId', ParseIdPipe) projectId: number,
   ) {
     return await this.commentService.findOneComment(
       commentId,
@@ -84,9 +84,9 @@ export class CommentController {
   @Patch('/tasks/:taskId/comments/:commentId')
   async updateComment(
     @Request() req,
-    @Param('commentId', ParseIntPipe) commentId: number,
-    @Param('taskId', ParseIntPipe) taskId: number,
-    @Param('projectId', ParseIntPipe) projectId: number,
+    @Param('commentId', ParseIdPipe) commentId: number,
+    @Param('taskId', ParseIdPipe) taskId: number,
+    @Param('projectId', ParseIdPipe) projectId: number,
     @Body() dto: UpdateCommentDto,
   ) {
     return await this.commentService.updateComment(
@@ -104,9 +104,9 @@ export class CommentController {
   @Delete('/tasks/:taskId/comments/:commentId')
   async removeComment(
     @Request() req,
-    @Param('commentId', ParseIntPipe) commentId: number,
-    @Param('taskId', ParseIntPipe) taskId: number,
-    @Param('projectId', ParseIntPipe) projectId: number,
+    @Param('commentId', ParseIdPipe) commentId: number,
+    @Param('taskId', ParseIdPipe) taskId: number,
+    @Param('projectId', ParseIdPipe) projectId: number,
   ) {
     return await this.commentService.removeComment(
       commentId,

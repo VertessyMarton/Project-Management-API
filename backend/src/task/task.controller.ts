@@ -8,7 +8,6 @@ import {
   Delete,
   Request,
   UseGuards,
-  ParseIntPipe,
   Query,
 } from '@nestjs/common';
 import { TaskService } from './task.service';
@@ -29,6 +28,7 @@ import {
   ReadLimit,
 } from 'src/common/decorators/rate-limit.decorator';
 import { TaskQueryDto } from './dto/task-query.dto';
+import { ParseIdPipe } from 'src/common/pipes/parse-id.pipe';
 
 @UseGuards(JwtAuthGuard, ProjectRolesGuard)
 @Controller('projects')
@@ -41,7 +41,7 @@ export class TaskController {
   @Post(':projectId/tasks')
   async createTask(
     @Request() req,
-    @Param('projectId', ParseIntPipe) projectId: number,
+    @Param('projectId', ParseIdPipe) projectId: number,
     @Body() dto: CreateTaskDto,
   ) {
     return await this.taskService.createTask(dto, req.user.id, projectId);
@@ -52,7 +52,7 @@ export class TaskController {
   @ReadLimit()
   @Get(':projectId/tasks')
   findAllTask(
-    @Param('projectId', ParseIntPipe) projectId: number,
+    @Param('projectId', ParseIdPipe) projectId: number,
     @Query() query: TaskQueryDto,
   ) {
     return this.taskService.findAllTasks(projectId, query);
@@ -63,8 +63,8 @@ export class TaskController {
   @ReadLimit()
   @Get(':projectId/tasks/:taskId')
   findOneTask(
-    @Param('projectId', ParseIntPipe) projectId: number,
-    @Param('taskId', ParseIntPipe) taskId: number,
+    @Param('projectId', ParseIdPipe) projectId: number,
+    @Param('taskId', ParseIdPipe) taskId: number,
   ) {
     return this.taskService.findOneTask(projectId, taskId);
   }
@@ -74,8 +74,8 @@ export class TaskController {
   @MutationLimit()
   @Patch(':projectId/tasks/:taskId')
   updateTask(
-    @Param('projectId', ParseIntPipe) projectId: number,
-    @Param('taskId', ParseIntPipe) taskId: number,
+    @Param('projectId', ParseIdPipe) projectId: number,
+    @Param('taskId', ParseIdPipe) taskId: number,
     @Body() dto: UpdateTaskDto,
   ) {
     return this.taskService.updateTask(taskId, projectId, dto);
@@ -86,8 +86,8 @@ export class TaskController {
   @MutationLimit()
   @Delete(':projectId/tasks/:taskId')
   removeTask(
-    @Param('projectId', ParseIntPipe) projectId: number,
-    @Param('taskId', ParseIntPipe) taskId: number,
+    @Param('projectId', ParseIdPipe) projectId: number,
+    @Param('taskId', ParseIdPipe) taskId: number,
   ) {
     return this.taskService.removeTask(taskId, projectId);
   }

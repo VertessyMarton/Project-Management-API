@@ -8,7 +8,6 @@ import {
   Delete,
   UseGuards,
   Request,
-  ParseIntPipe,
   Query,
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
@@ -35,6 +34,7 @@ import {
 import { RemoveMemberDto } from './dto/remove-member.dto';
 import { ChangeMemberDto } from './dto/change-member.dto';
 import { ProjectQueryDto } from './dto/project-query.dto';
+import { ParseIdPipe } from 'src/common/pipes/parse-id.pipe';
 
 @UseGuards(JwtAuthGuard, ProjectRolesGuard)
 @Controller('projects')
@@ -52,7 +52,7 @@ export class ProjectController {
   @ReadLimit()
   @ProjectRoles(['owner', 'admin', 'member', 'viewer'])
   @Get(':projectId')
-  async getProject(@Param('projectId', ParseIntPipe) id: number) {
+  async getProject(@Param('projectId', ParseIdPipe) id: number) {
     return await this.projectService.getProject(id);
   }
 
@@ -67,7 +67,7 @@ export class ProjectController {
   @MutationLimit()
   @ProjectRoles(['owner'])
   @Delete(':projectId')
-  async removeProject(@Param('projectId', ParseIntPipe) id: number) {
+  async removeProject(@Param('projectId', ParseIdPipe) id: number) {
     return await this.projectService.removeProject(id);
   }
 
@@ -76,7 +76,7 @@ export class ProjectController {
   @ProjectRoles(['owner', 'admin'])
   @Patch(':projectId')
   async updateProject(
-    @Param('projectId', ParseIntPipe) id: number,
+    @Param('projectId', ParseIdPipe) id: number,
     @Body() dto: UpdateProjectDto,
   ) {
     return await this.projectService.updateProject(id, dto);
@@ -87,7 +87,7 @@ export class ProjectController {
   @ProjectRoles(['owner', 'admin'])
   @Post(':projectId/members')
   async addProjectMember(
-    @Param('projectId', ParseIntPipe) id: number,
+    @Param('projectId', ParseIdPipe) id: number,
     @Body() dto: AddMemberDto,
   ) {
     return await this.projectService.addProjectMember(id, dto);
@@ -98,7 +98,7 @@ export class ProjectController {
   @ProjectRoles(['owner', 'admin'])
   @Delete(':projectId/members')
   async removeProjectMember(
-    @Param('projectId', ParseIntPipe) id: number,
+    @Param('projectId', ParseIdPipe) id: number,
     @Body() dto: RemoveMemberDto,
   ) {
     return await this.projectService.removeProjectMember(id, dto);
@@ -109,7 +109,7 @@ export class ProjectController {
   @ProjectRoles(['owner', 'admin'])
   @Patch(':projectId/members')
   async updateProjectMemberStatus(
-    @Param('projectId', ParseIntPipe) id: number,
+    @Param('projectId', ParseIdPipe) id: number,
     @Body() dto: ChangeMemberDto,
   ) {
     return await this.projectService.updateProjectMemberStatus(id, dto);

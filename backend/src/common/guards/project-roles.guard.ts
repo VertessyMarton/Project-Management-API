@@ -10,6 +10,7 @@ import { ProjectRoles } from '../decorators/project-roles.decorator';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProjectMembers } from 'src/project/entities/project-members.entity';
 import { Repository } from 'typeorm';
+import { ParseIdPipe } from '../pipes/parse-id.pipe';
 
 @Injectable()
 export class ProjectRolesGuard implements CanActivate {
@@ -25,9 +26,15 @@ export class ProjectRolesGuard implements CanActivate {
       return true;
     }
     const request = context.switchToHttp().getRequest();
-    const projectId = Number(request.params.projectId);
+    const projectId = await new ParseIdPipe().transform(
+      request.params.projectId,
+      {
+        type: 'param',
+        metatype: Number,
+      },
+    );
 
-    if (!Number.isInteger(projectId) || projectId <= 0) {
+    if (!Number.isSafeInteger(projectId) || projectId <= 0) {
       throw new BadRequestException(
         'Validation failed (numeric string is expected)',
       );

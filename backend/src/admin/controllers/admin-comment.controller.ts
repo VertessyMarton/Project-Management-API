@@ -3,7 +3,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Query,
   Request,
   UseGuards,
@@ -17,6 +16,7 @@ import {
 } from 'src/common/decorators/swagger/admin-comment-docs.decorator';
 import { AdminCommentQueryDto } from '../dto/admin.comment-query.dto';
 import { AdminCommentService } from '../services/admin-comment.service';
+import { ParseIdPipe } from 'src/common/pipes/parse-id.pipe';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('admin')
@@ -34,7 +34,7 @@ export class AdminCommentController {
   @Roles('admin')
   @Delete('comments/:commentId')
   async deleteComment(
-    @Param('commentId', ParseIntPipe) commentId: number,
+    @Param('commentId', ParseIdPipe) commentId: number,
     @Request() req,
   ) {
     return this.adminService.deleteComment(

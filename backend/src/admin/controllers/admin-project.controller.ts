@@ -3,7 +3,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Query,
   Request,
   UseGuards,
@@ -18,6 +17,7 @@ import {
 } from 'src/common/decorators/swagger/admin-project-docs.decorator';
 import { AdminProjectQueryDto } from '../dto/admin.project-query.dto';
 import { AdminProjectService } from '../services/admin-project.service';
+import { ParseIdPipe } from 'src/common/pipes/parse-id.pipe';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('admin')
@@ -34,7 +34,7 @@ export class AdminProjectController {
   @AdminFindOneProjectDocs()
   @Roles('admin')
   @Get('projects/:projectId')
-  async findOneProject(@Param('projectId', ParseIntPipe) projectId: number) {
+  async findOneProject(@Param('projectId', ParseIdPipe) projectId: number) {
     return this.adminService.findOneProject(projectId);
   }
 
@@ -42,7 +42,7 @@ export class AdminProjectController {
   @Roles('admin')
   @Delete('projects/:projectId')
   async deleteProject(
-    @Param('projectId', ParseIntPipe) projectId: number,
+    @Param('projectId', ParseIdPipe) projectId: number,
     @Request() req,
   ) {
     return this.adminService.deleteProject(

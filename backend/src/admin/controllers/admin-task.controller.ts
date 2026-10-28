@@ -3,7 +3,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Query,
   Request,
   UseGuards,
@@ -18,6 +17,7 @@ import {
 } from 'src/common/decorators/swagger/admin-task-docs.decorator';
 import { AdminTaskQueryDto } from '../dto/admin.task-query.dto';
 import { AdminTaskService } from '../services/admin-task.service';
+import { ParseIdPipe } from 'src/common/pipes/parse-id.pipe';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('admin')
@@ -34,7 +34,7 @@ export class AdminTaskController {
   @AdminFindOneTaskDocs()
   @Roles('admin')
   @Get('tasks/:taskId')
-  async findOneTask(@Param('taskId', ParseIntPipe) taskId: number) {
+  async findOneTask(@Param('taskId', ParseIdPipe) taskId: number) {
     return this.adminService.findOneTask(taskId);
   }
 
@@ -42,7 +42,7 @@ export class AdminTaskController {
   @Roles('admin')
   @Delete('tasks/:taskId')
   async deleteTask(
-    @Param('taskId', ParseIntPipe) taskId: number,
+    @Param('taskId', ParseIdPipe) taskId: number,
     @Request() req,
   ) {
     return this.adminService.deleteTask(taskId, req.user.id, req.requestId);

@@ -5,7 +5,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Query,
   Request,
@@ -24,6 +23,7 @@ import {
 } from 'src/common/decorators/swagger/admin-user-docs.decorator';
 import { AdminUserQueryDto } from '../dto/admin.user-query.dto';
 import { AdminUserService } from '../services/admin-user.service';
+import { ParseIdPipe } from 'src/common/pipes/parse-id.pipe';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(ClassSerializerInterceptor)
@@ -41,7 +41,7 @@ export class AdminUserController {
   @AdminFindOneUserDocs()
   @Roles('admin')
   @Get(':userId')
-  async findOneUser(@Param('userId', ParseIntPipe) userId: number) {
+  async findOneUser(@Param('userId', ParseIdPipe) userId: number) {
     return this.adminService.findOneUser(userId);
   }
 
@@ -49,7 +49,7 @@ export class AdminUserController {
   @Roles('admin')
   @Patch(':userId/role')
   async setUserRole(
-    @Param('userId', ParseIntPipe) userId: number,
+    @Param('userId', ParseIdPipe) userId: number,
     @Body() dto: UpdateUserRoleDto,
     @Request() req,
   ) {
@@ -65,7 +65,7 @@ export class AdminUserController {
   @Roles('admin')
   @Delete(':userId')
   async deleteuser(
-    @Param('userId', ParseIntPipe) userId: number,
+    @Param('userId', ParseIdPipe) userId: number,
     @Request() req,
   ) {
     return this.adminService.deleteUser(userId, req.user.id, req.requestId);
