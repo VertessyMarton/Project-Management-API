@@ -15,6 +15,10 @@ async function bootstrap() {
 
   app.set('trust proxy', 3);
 
+  app.getHttpAdapter().getInstance().disable('x-powered-by');
+
+  app.use(helmet());
+
   const publicDirectory = join(__dirname, '..', 'public');
   const indexFile = join(publicDirectory, 'index.html');
   if (existsSync(indexFile)) {
@@ -32,8 +36,6 @@ async function bootstrap() {
       next();
     });
   }
-
-  app.use(helmet());
 
   app.enableCors({
     origin: [
