@@ -1,3 +1,7 @@
+import { OAuthStateService } from './oauth-state.service';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { GitHubAuthGuard } from './guards/github-auth.guard';
+import { MicrosoftAuthGuard } from './guards/microsoft-auth.guard';
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
@@ -33,6 +37,10 @@ import { AuditLog } from 'src/audit-log/entities/aduit-log.entity';
   ],
   controllers: [AuthController],
   providers: [
+    OAuthStateService,
+    GoogleAuthGuard,
+    GitHubAuthGuard,
+    MicrosoftAuthGuard,
     AuthService,
     RefreshTokenService,
     OAuthService,

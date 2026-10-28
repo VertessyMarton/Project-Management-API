@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
@@ -57,7 +58,11 @@ async function bootstrap() {
     credentials: true,
   });
 
-  app.use(cookieParser());
+  app.use(
+    cookieParser(
+      app.get(ConfigService).getOrThrow<string>('OAUTH_STATE_COOKIE_SECRET'),
+    ),
+  );
 
   app.use(requestIdMiddleware);
 
